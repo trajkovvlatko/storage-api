@@ -1,0 +1,58 @@
+name:                web
+version:             0.1.0.0
+github:              "trajkovvlatko/web"
+license:             BSD3
+author:              "Vlatko Trajkov"
+maintainer:          "trajkovvlatko@gmail.com"
+copyright:           "2021 Vlatko Trajkov"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+default-extensions:
+- OverloadedStrings
+- ScopedTypeVariables
+- DeriveGeneric
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/trajkovvlatko/web#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- classy-prelude
+
+library:
+  source-dirs: src
+  dependencies:
+    - scotty
+    - aeson
+    - blaze-html
+
+executables:
+  web-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - web
+
+tests:
+  web-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - web
