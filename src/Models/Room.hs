@@ -1,5 +1,6 @@
 module Models.Room 
   ( getAllRooms
+  , getRoom
   , Room
     ( Room
     , rId
@@ -8,7 +9,7 @@ module Models.Room
 
 import GHC.Generics (Generic)
 import Database (withConn)
-import Database.PostgreSQL.Simple ( query_ )
+import Database.PostgreSQL.Simple ( query_, query, Only (Only) )
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
 import Data.Aeson ( ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs )
 
@@ -26,3 +27,12 @@ instance ToJSON Room where
 
 getAllRooms :: IO [Room]
 getAllRooms = withConn $ \conn -> query_ conn "SELECT id, name FROM rooms;"
+
+getRoom :: Int -> IO (Maybe Room)
+getRoom paramId = do
+  results <- withConn $ \conn -> query conn "SELECT * FROM rooms WHERE id = ? LIMIT 1" (Only paramId)
+  case results of
+    [(resId, resName)] ->
+      return $ Just $ Room resId resName
+    _ ->
+      return Nothing

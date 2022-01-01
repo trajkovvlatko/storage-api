@@ -8,7 +8,7 @@ module Controllers.Rooms
   ) where
 
 import Web.Scotty (liftAndCatchIO, ActionM, json, param)
-import Models.Room (Room (Room, rId, rName), getAllRooms)
+import Models.Room (Room (Room, rId, rName), getAllRooms, getRoom)
 
 index :: ActionM ()
 index = liftAndCatchIO getAllRooms >>= json
@@ -16,7 +16,10 @@ index = liftAndCatchIO getAllRooms >>= json
 preview :: ActionM ()
 preview = do
   paramId :: Int <- param "id"
-  json $ Room { rId = paramId, rName = "name" }
+  res <- liftAndCatchIO (getRoom paramId)
+  case res of
+    Nothing   -> json ()
+    Just room -> json room
 
 create :: ActionM ()
 create = do
