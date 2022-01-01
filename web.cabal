@@ -29,6 +29,7 @@ library
       Controllers.Rooms
       Controllers.Storages
       Database
+      Models.Room
       Router
       Server
       Views.Layout
