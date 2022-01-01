@@ -3,7 +3,7 @@ module Router
   )
 where
 
-import Web.Scotty as S ( get, ScottyM )
+import Web.Scotty as S ( get, post, ScottyM, patch )
 import qualified Controllers.Main as Main
 import qualified Controllers.Storages as Storages
 import qualified Controllers.Rooms as Rooms
@@ -14,8 +14,10 @@ routes = do
   get "/" Main.index
 
   -- Rooms routes
-  get "/rooms" Rooms.index
-  get "/rooms/:id" Rooms.preview
+  get   "/rooms"     Rooms.index
+  get   "/rooms/:id" Rooms.preview
+  post  "/rooms"     Rooms.create
+  patch "/rooms/:id" Rooms.update
 
   -- Storage routes
   get "/storages" Storages.index

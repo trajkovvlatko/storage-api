@@ -1,6 +1,8 @@
 module Models.Room 
   ( getAllRooms
   , getRoom
+  , createRoom
+  , updateRoom
   , Room
     ( Room
     , rId
@@ -25,14 +27,31 @@ instance ToJSON Room where
     pairs $    "id"   .= rId
             <> "name" .= rName
 
+-- queries
+
 getAllRooms :: IO [Room]
 getAllRooms = withConn $ \conn -> query_ conn "SELECT id, name FROM rooms;"
 
 getRoom :: Int -> IO (Maybe Room)
 getRoom paramId = do
   results <- withConn $ \conn -> query conn "SELECT * FROM rooms WHERE id = ? LIMIT 1" (Only paramId)
-  case results of
-    [(resId, resName)] ->
-      return $ Just $ Room resId resName
-    _ ->
-      return Nothing
+  resultsToMaybeRoom results
+
+createRoom :: String -> IO (Maybe Room)
+createRoom paramName = do
+  results <- withConn $ \conn -> query conn "INSERT INTO rooms (name) VALUES (?) RETURNING id, name" [paramName]
+  resultsToMaybeRoom results
+
+updateRoom :: Int -> String -> IO (Maybe Room)
+updateRoom paramId paramName = do
+  results <- withConn $ \conn -> query conn "UPDATE rooms SET name = ? WHERE id = ? RETURNING id, name" (paramName, paramId)
+  resultsToMaybeRoom results
+
+-- helper functions
+
+resultsToMaybeRoom :: [(Int, String)] -> IO (Maybe Room)
+resultsToMaybeRoom = \case
+  [(resId, resName)] ->
+    return $ Just $ Room resId resName
+  _ ->
+    return Nothing
