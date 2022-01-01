@@ -1,6 +1,5 @@
 module Controllers.Rooms
-  (
-    index
+  ( index
   , preview
   , create
   , update
@@ -8,7 +7,7 @@ module Controllers.Rooms
   ) where
 
 import Web.Scotty (liftAndCatchIO, ActionM, json, param)
-import Models.Room (Room (Room, rId, rName), getAllRooms, getRoom, createRoom, updateRoom)
+import Models.Room (Room (Room, rId, rName), getAllRooms, getRoom, createRoom, updateRoom, deleteRoom)
 
 index :: ActionM ()
 index = liftAndCatchIO getAllRooms >>= json
@@ -32,9 +31,9 @@ update = do
 delete :: ActionM ()
 delete = do
   paramId :: Int <- param "id"
-  json $ Room { rId = paramId, rName = "name" }
+  liftAndCatchIO (deleteRoom paramId) >>= resultToJsonResponse
 
--- helpers
+-- helper functions
 
 resultToJsonResponse :: Maybe Room -> ActionM ()
 resultToJsonResponse = \case

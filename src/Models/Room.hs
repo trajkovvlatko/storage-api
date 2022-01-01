@@ -3,6 +3,7 @@ module Models.Room
   , getRoom
   , createRoom
   , updateRoom
+  , deleteRoom
   , Room
     ( Room
     , rId
@@ -11,9 +12,9 @@ module Models.Room
 
 import GHC.Generics (Generic)
 import Database (withConn)
-import Database.PostgreSQL.Simple ( query_, query, Only (Only) )
+import Database.PostgreSQL.Simple (query_, query, Only (Only))
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
-import Data.Aeson ( ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs )
+import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
 
 data Room = Room
   { rId     :: Int
@@ -45,6 +46,11 @@ createRoom paramName = do
 updateRoom :: Int -> String -> IO (Maybe Room)
 updateRoom paramId paramName = do
   results <- withConn $ \conn -> query conn "UPDATE rooms SET name = ? WHERE id = ? RETURNING id, name" (paramName, paramId)
+  resultsToMaybeRoom results
+
+deleteRoom :: Int -> IO (Maybe Room)
+deleteRoom paramId = do
+  results <- withConn $ \conn -> query conn "DELETE FROM rooms WHERE id = ? RETURNING id, name" [paramId]
   resultsToMaybeRoom results
 
 -- helper functions
