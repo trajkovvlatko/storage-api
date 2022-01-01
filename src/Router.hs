@@ -13,10 +13,10 @@ routes = do
   -- Root path
   get "/" Main.index
 
-  -- Storage routes
-  get "/storages" Storages.index
-  get "/storages/:id" Storages.preview
-
   -- Rooms routes
   get "/rooms" Rooms.index
   get "/rooms/:id" Rooms.preview
+
+  -- Storage routes
+  get "/storages" Storages.index
+  get "/storages/:id" Storages.preview

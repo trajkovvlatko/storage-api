@@ -2,6 +2,7 @@ module Controllers.Storages
   (
     index
   , preview
+  , create
   ) where
 import qualified Web.Scotty as S
 import GHC.Generics (Generic)
@@ -24,5 +25,20 @@ index = do
 
 preview :: S.ActionM ()
 preview = do
+  paramId :: Int <- S.param "id"
+  S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }
+
+create :: S.ActionM ()
+create = do
+  paramId :: Int <- S.param "id"
+  S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }
+
+update :: S.ActionM ()
+update = do
+  paramId :: Int <- S.param "id"
+  S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }
+
+delete :: S.ActionM ()
+delete = do
   paramId :: Int <- S.param "id"
   S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }

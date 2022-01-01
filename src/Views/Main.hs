@@ -13,6 +13,8 @@ import Text.Blaze.Html5
   , h1
   , p
   , (!)
+  , ul
+  , li, h3
   )
 import Text.Blaze.Html5.Attributes ( class_ )
 import Prelude hiding ( div, head, id )
@@ -24,4 +26,12 @@ indexView = (html . renderHtml) $ do
   layoutView $ do
     div ! class_ "container" $ do
       h1 "Storage"
-      p "Lorem ipsum"
+      p "API docs"
+      h3 "Rooms"
+      ul $ do
+        li "index"
+        li "show"
+      h3 "Storage"
+      ul $ do
+        li "index"
+        li "show"
