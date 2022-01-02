@@ -4,15 +4,15 @@ module Controllers.Auth
   , logout
   ) where
 import Web.Scotty (ActionM, text, liftAndCatchIO)
-import Lib.Auth (generateToken, userIdToToken, tokenToUserId)
-import Data.Text.Lazy ( fromStrict )
+import Lib.Auth (userIdToToken, tokenToUserId)
+import Data.Text.Lazy (pack)
 
 login :: ActionM ()
 login = do
-  let userId = "some user id ---"
+  let userId = 1234
   encoded <- liftAndCatchIO $ userIdToToken userId
   decoded <- liftAndCatchIO $ tokenToUserId encoded
-  text $ fromStrict decoded
+  text $ (pack . show) decoded
 
 register :: ActionM ()
 register = do
