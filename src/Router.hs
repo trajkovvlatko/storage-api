@@ -7,11 +7,17 @@ import Web.Scotty as S ( get, post, ScottyM, patch, delete )
 import qualified Controllers.Main as Main
 import qualified Controllers.Storages as Storages
 import qualified Controllers.Rooms as Rooms
+import qualified Controllers.Auth as Auth
 
 routes :: ScottyM ()
 routes = do
   -- Root path
   get "/" Main.index
+
+  -- Auth
+  get "/login"    Auth.login
+  get "/register" Auth.register
+  get "/logout"   Auth.logout
 
   -- Rooms routes
   get    "/rooms"     Rooms.index

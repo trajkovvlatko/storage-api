@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Controllers.Auth
       Controllers.Main
       Controllers.Rooms
       Controllers.Storages
