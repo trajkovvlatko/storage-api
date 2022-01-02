@@ -38,6 +38,8 @@ library:
     - blaze-html
     - postgresql-simple
     - resource-pool
+    - jose-jwt
+    - text
 
 executables:
   web-exe:

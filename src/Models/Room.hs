@@ -58,6 +58,6 @@ deleteRoom paramId = do
 resultsToMaybeRoom :: [(Int, String)] -> IO (Maybe Room)
 resultsToMaybeRoom = \case
   [(resId, resName)] ->
-    return $ Just $ Room resId resName
+    return $ Just $ Room { rId = resId, rName = resName }
   _ ->
     return Nothing

@@ -29,6 +29,7 @@ library
       Controllers.Rooms
       Controllers.Storages
       Database
+      Lib.Auth
       Models.Room
       Router
       Server
@@ -49,9 +50,11 @@ library
     , blaze-html
     , classy-prelude
     , dotenv
+    , jose-jwt
     , postgresql-simple
     , resource-pool
     , scotty
+    , text
   default-language: Haskell2010
 
 executable web-exe
