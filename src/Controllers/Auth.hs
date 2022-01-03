@@ -2,11 +2,26 @@ module Controllers.Auth
   ( login
   , register
   ) where
-import Web.Scotty (ActionM, text, liftAndCatchIO, param, json)
+
+import GHC.Generics (Generic)
+import Web.Scotty (ActionM, text, liftAndCatchIO, param, json, status)
 import Lib.Auth (userIdToToken, tokenToUserId)
 import Data.Text.Lazy (Text)
 import Models.User (createUser, User (uId))
-import ClassyPrelude (unpack, pack, Utf8(encodeUtf8))
+import ClassyPrelude (unpack, pack, Utf8(encodeUtf8), IsString (fromString), Text)
+import Data.Aeson (ToJSON(toJSON, toEncoding), KeyValue((.=)), pairs)
+
+newtype ErrorResponse = ErrorResponse { eMessage :: String } deriving Generic
+
+instance ToJSON ErrorResponse where
+  toEncoding (ErrorResponse eMessage) =
+    pairs $ "message" .= eMessage
+
+newtype TokenResponse = TokenResponse { uToken :: ClassyPrelude.Text } deriving Generic
+
+instance ToJSON TokenResponse where
+  toEncoding (TokenResponse uToken) =
+    pairs $ "token" .= uToken
 
 register :: ActionM ()
 register = do
@@ -15,25 +30,23 @@ register = do
 
   maybeUser <- liftAndCatchIO (createUser paramEmail paramPassword)
   case maybeUser of
-    Nothing   -> json () -- TODO: show an error message here
+    Nothing   -> json $ ErrorResponse { eMessage = "Cannot create a user." }
     Just user -> do
-      let userId  = uId user
-
-      encoded <- liftAndCatchIO $ userIdToToken userId
+      encoded <- (liftAndCatchIO . userIdToToken) $ uId user
       case encoded of
-        Left _ -> text "Cannot encode userId to token"
-        Right encodedUserId -> do
-          text $ (pack . show) encodedUserId
+        Left _              -> json $ ErrorResponse { eMessage = "Cannot encode user token." }
+        Right encodedUserId -> json $ TokenResponse { uToken = encodedUserId }
 
 login :: ActionM ()
 login = do
-  paramToken :: String <- param "token"
-  decoded <- liftAndCatchIO $ tokenToUserId (pack paramToken)
-  case decoded of
-    Left _ -> text "Cannot decode token"
-    Right userId -> text $ integerToText userId
+  text "login"
+--   paramToken :: String <- param "token"
+--   decoded <- liftAndCatchIO $ tokenToUserId (pack paramToken)
+--   case decoded of
+--     Left _ -> text "Cannot decode token"
+--     Right userId -> text $ integerToText userId
 
 -- helper functions
 
-integerToText :: Integer -> Text
+integerToText :: Integer -> ClassyPrelude.Text
 integerToText = pack . show
