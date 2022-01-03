@@ -32,6 +32,7 @@ library
       Database
       Lib.Auth
       Models.Room
+      Models.User
       Router
       Server
       Views.Layout

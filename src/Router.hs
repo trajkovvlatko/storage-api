@@ -15,9 +15,9 @@ routes = do
   get "/" Main.index
 
   -- Auth
-  get "/login"    Auth.login
-  get "/register" Auth.register
-  get "/logout"   Auth.logout
+  post "/login"    Auth.login
+  post "/register" Auth.register
+  post "/logout"   Auth.logout
 
   -- Rooms routes
   get    "/rooms"     Rooms.index
