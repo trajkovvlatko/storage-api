@@ -17,7 +17,6 @@ routes = do
   -- Auth
   post "/login"    Auth.login
   post "/register" Auth.register
-  post "/logout"   Auth.logout
 
   -- Rooms routes
   get    "/rooms"     Rooms.index

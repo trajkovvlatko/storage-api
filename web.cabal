@@ -53,6 +53,7 @@ library
     , classy-prelude
     , dotenv
     , jose-jwt
+    , password
     , postgresql-simple
     , resource-pool
     , scotty
