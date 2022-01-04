@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 
-module Models.User 
+module Models.User
   ( createUser
   , User
   , uId
@@ -33,8 +33,7 @@ instance ToJSON User where
 createUser :: String -> String -> IO (Maybe User)
 createUser paramEmail paramPassword = do
   hashedPassword <- getHashedPassword paramPassword
-  results <- withConn $ \conn -> try $ query conn queryString [paramEmail, hashedPassword]
-  resultsToMaybeUser results
+  resultsToMaybeUser =<< withConn (\conn -> try $ query conn queryString [paramEmail, hashedPassword])
   where
     queryString = "INSERT INTO users (email, password) VALUES (?, ?) RETURNING id, email"
 

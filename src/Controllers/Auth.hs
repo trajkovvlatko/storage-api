@@ -1,4 +1,4 @@
-module Controllers.Auth 
+module Controllers.Auth
   ( login
   , register
   ) where
