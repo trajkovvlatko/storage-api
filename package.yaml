@@ -26,9 +26,9 @@ default-extensions:
 description:         Please see the README on GitHub at <https://github.com/trajkovvlatko/web#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- classy-prelude
-- dotenv
+  - base >= 4.7 && < 5
+  - classy-prelude
+  - dotenv
 
 library:
   source-dirs: src
@@ -40,7 +40,7 @@ library:
     - resource-pool
     - jose-jwt
     - text
-    - password
+    - MissingH
 
 executables:
   web-exe:

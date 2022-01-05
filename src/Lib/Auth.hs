@@ -2,6 +2,8 @@
 module Lib.Auth
   ( tokenToUserId
   , userIdToToken
+  , AuthError
+  , Token
   ) where
 
 import Web.Scotty (liftAndCatchIO)

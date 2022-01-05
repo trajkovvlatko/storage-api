@@ -47,13 +47,13 @@ library
       DeriveGeneric
       LambdaCase
   build-depends:
-      aeson
+      MissingH
+    , aeson
     , base >=4.7 && <5
     , blaze-html
     , classy-prelude
     , dotenv
     , jose-jwt
-    , password
     , postgresql-simple
     , resource-pool
     , scotty
