@@ -12,12 +12,13 @@ module Models.Room
 
 import GHC.Generics (Generic)
 import Database (withConn)
-import Database.PostgreSQL.Simple (query_, query, Only (Only))
+import Database.PostgreSQL.Simple (query_, query, Only (Only), SqlError)
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
 import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
+import Control.Exception (try)
 
 data Room = Room
-  { rId     :: Int
+  { rId     :: Integer
   , rName   :: String } deriving Generic
 
 instance FromRow Room where
@@ -35,28 +36,40 @@ getAllRooms = withConn $ \conn -> query_ conn "SELECT id, name FROM rooms;"
 
 getRoom :: Int -> IO (Maybe Room)
 getRoom paramId = do
-  results <- withConn $ \conn -> query conn "SELECT * FROM rooms WHERE id = ? LIMIT 1" (Only paramId)
+  results <- withConn $ \conn -> try $  query conn "SELECT * FROM rooms WHERE id = ? LIMIT 1" (Only paramId)
   resultsToMaybeRoom results
 
 createRoom :: String -> IO (Maybe Room)
 createRoom paramName = do
-  results <- withConn $ \conn -> query conn "INSERT INTO rooms (name) VALUES (?) RETURNING id, name" [paramName]
+  results <- withConn $ \conn -> try $ query conn "INSERT INTO rooms (name) VALUES (?) RETURNING id, name" [paramName]
   resultsToMaybeRoom results
 
 updateRoom :: Int -> String -> IO (Maybe Room)
 updateRoom paramId paramName = do
-  results <- withConn $ \conn -> query conn "UPDATE rooms SET name = ? WHERE id = ? RETURNING id, name" (paramName, paramId)
+  results <- withConn $ \conn -> try $ query conn "UPDATE rooms SET name = ? WHERE id = ? RETURNING id, name" (paramName, paramId)
   resultsToMaybeRoom results
 
 deleteRoom :: Int -> IO (Maybe Room)
 deleteRoom paramId = do
-  results <- withConn $ \conn -> query conn "DELETE FROM rooms WHERE id = ? RETURNING id, name" [paramId]
+  results <- withConn $ \conn -> try $ query conn "DELETE FROM rooms WHERE id = ? RETURNING id, name" [paramId]
   resultsToMaybeRoom results
 
 -- helper functions
 
-resultsToMaybeRoom :: [(Int, String)] -> IO (Maybe Room)
-resultsToMaybeRoom = \case
+resultsToMaybeRoom :: Either SqlError [(Integer, String)] -> IO (Maybe Room)
+resultsToMaybeRoom maybeRoom = do
+  case maybeRoom of
+    Left err -> do
+      print err
+      return Nothing
+    Right [(resId, resName)] -> do
+      return $ Just $ Room { rId = resId, rName = resName }
+    Right invalid -> do
+      print invalid
+      return Nothing
+
+resultsToMaybeRoom' :: [(Integer, String)] -> IO (Maybe Room)
+resultsToMaybeRoom' = \case
   [(resId, resName)] ->
     return $ Just $ Room { rId = resId, rName = resName }
   _ ->
