@@ -31,6 +31,7 @@ library
       Controllers.Storages
       Database
       Lib.Auth
+      Lib.Error
       Models.Room
       Models.User
       Router

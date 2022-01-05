@@ -16,6 +16,7 @@ import Database.PostgreSQL.Simple (query_, query, Only (Only), SqlError)
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
 import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
 import Control.Exception (try)
+import Lib.Auth (UserId)
 
 data Room = Room
   { rId     :: Integer
@@ -31,46 +32,32 @@ instance ToJSON Room where
 
 -- queries
 
-getAllRooms :: IO [Room]
-getAllRooms = withConn $ \conn -> query_ conn "SELECT id, name FROM rooms;"
+getAllRooms :: UserId -> IO [Room]
+getAllRooms userId = withConn $ \conn -> query conn "SELECT id, name FROM rooms WHERE user_id = ?;" (Only userId)
 
-getRoom :: Int -> IO (Maybe Room)
-getRoom paramId = do
-  results <- withConn $ \conn -> try $  query conn "SELECT * FROM rooms WHERE id = ? LIMIT 1" (Only paramId)
-  resultsToMaybeRoom results
+getRoom :: UserId -> Integer -> IO (Maybe Room)
+getRoom userId paramId = do
+  withConn $ \conn -> query conn queryString [paramId, userId] >>= resultsToMaybeRoom
+  where queryString = "SELECT id, name FROM rooms WHERE id = ? AND user_id = ? LIMIT 1"
 
-createRoom :: String -> IO (Maybe Room)
-createRoom paramName = do
-  results <- withConn $ \conn -> try $ query conn "INSERT INTO rooms (name) VALUES (?) RETURNING id, name" [paramName]
-  resultsToMaybeRoom results
+createRoom :: UserId -> String -> IO (Maybe Room)
+createRoom userId paramName = do
+  withConn $ \conn -> query conn queryString [paramName, show userId] >>= resultsToMaybeRoom
+  where queryString = "INSERT INTO rooms (name, user_id) VALUES (?, ?) RETURNING id, name"
 
-updateRoom :: Int -> String -> IO (Maybe Room)
-updateRoom paramId paramName = do
-  results <- withConn $ \conn -> try $ query conn "UPDATE rooms SET name = ? WHERE id = ? RETURNING id, name" (paramName, paramId)
-  resultsToMaybeRoom results
+updateRoom :: UserId -> Integer -> String -> IO (Maybe Room)
+updateRoom userId paramId paramName = do
+  withConn $ \conn -> query conn queryString (paramName, paramId, userId) >>= resultsToMaybeRoom
+  where queryString = "UPDATE rooms SET name = ? WHERE id = ? AND user_id = ? RETURNING id, name"
 
-deleteRoom :: Int -> IO (Maybe Room)
-deleteRoom paramId = do
-  results <- withConn $ \conn -> try $ query conn "DELETE FROM rooms WHERE id = ? RETURNING id, name" [paramId]
-  resultsToMaybeRoom results
+deleteRoom :: UserId -> Integer -> IO (Maybe Room)
+deleteRoom userId paramId = do
+  withConn $ \conn -> query conn queryString [paramId, userId] >>= resultsToMaybeRoom
+  where queryString = "DELETE FROM rooms WHERE id = ? AND user_id = ? RETURNING id, name"
 
 -- helper functions
 
-resultsToMaybeRoom :: Either SqlError [(Integer, String)] -> IO (Maybe Room)
-resultsToMaybeRoom maybeRoom = do
-  case maybeRoom of
-    Left err -> do
-      print err
-      return Nothing
-    Right [(resId, resName)] -> do
-      return $ Just $ Room { rId = resId, rName = resName }
-    Right invalid -> do
-      print invalid
-      return Nothing
-
-resultsToMaybeRoom' :: [(Integer, String)] -> IO (Maybe Room)
-resultsToMaybeRoom' = \case
-  [(resId, resName)] ->
-    return $ Just $ Room { rId = resId, rName = resName }
-  _ ->
-    return Nothing
+resultsToMaybeRoom :: [(Integer, String)] -> IO (Maybe Room)
+resultsToMaybeRoom = \case
+  [(resId, resName)] -> return $ Just $ Room { rId = resId, rName = resName }
+  _                  -> return Nothing

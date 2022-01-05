@@ -4,6 +4,7 @@ module Lib.Auth
   , userIdToToken
   , AuthError
   , Token
+  , UserId
   ) where
 
 import Web.Scotty (liftAndCatchIO)

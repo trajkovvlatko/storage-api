@@ -11,13 +11,8 @@ import Data.Text.Lazy (Text)
 import Models.User (createUser, findUserByEmail, User (uId, uPassword))
 import ClassyPrelude (unpack, pack, Utf8(encodeUtf8), IsString (fromString), Text)
 import Data.Aeson (ToJSON(toJSON, toEncoding), KeyValue((.=)), pairs)
+import Lib.Error (ErrorResponse (ErrorResponse), eMessage)
 import Data.Hash.MD5 ( md5s, Str(Str) )
-
-newtype ErrorResponse = ErrorResponse { eMessage :: String } deriving Generic
-
-instance ToJSON ErrorResponse where
-  toEncoding (ErrorResponse eMessage) =
-    pairs $ "message" .= eMessage
 
 newtype TokenResponse = TokenResponse { uToken :: ClassyPrelude.Text } deriving Generic
 
