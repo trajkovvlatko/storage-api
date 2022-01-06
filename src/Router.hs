@@ -7,6 +7,7 @@ import Web.Scotty as S ( get, post, ScottyM, patch, delete )
 import qualified Controllers.Main as Main
 import qualified Controllers.Storages as Storages
 import qualified Controllers.Rooms as Rooms
+import qualified Controllers.Drawers as Drawers
 import qualified Controllers.Auth as Auth
 
 routes :: ScottyM ()
@@ -31,3 +32,10 @@ routes = do
   post   "/storages"     Storages.create
   patch  "/storages/:id" Storages.update
   delete "/storages/:id" Storages.delete
+
+  -- Drawer routes
+  get    "/drawers"     Drawers.index
+  get    "/drawers/:id" Drawers.preview
+  post   "/drawers"     Drawers.create
+  patch  "/drawers/:id" Drawers.update
+  delete "/drawers/:id" Drawers.delete

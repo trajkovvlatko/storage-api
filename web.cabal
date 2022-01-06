@@ -26,12 +26,14 @@ source-repository head
 library
   exposed-modules:
       Controllers.Auth
+      Controllers.Drawers
       Controllers.Main
       Controllers.Rooms
       Controllers.Storages
       Database
       Lib.Auth
       Lib.Error
+      Models.Drawer
       Models.Room
       Models.Storage
       Models.User
