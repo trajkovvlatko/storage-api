@@ -2,12 +2,14 @@
 module Lib.Auth
   ( tokenToUserId
   , userIdToToken
+  , invalidTokenJSONResponse
+  , withUserIdOrErr
   , AuthError
   , Token
   , UserId
   ) where
 
-import Web.Scotty (liftAndCatchIO)
+import Web.Scotty (liftAndCatchIO, ActionM, json, param)
 import ClassyPrelude (Utf8 (decodeUtf8), encodeUtf8, readFile, ByteString, Text, pack)
 import Database.PostgreSQL.Simple.Newtypes (Aeson(Aeson))
 import qualified Data.Aeson as Aeson
@@ -17,6 +19,7 @@ import Jose.Jwa
 import Jose.Jwk
 import Jose.Jwt
 import Data.Text.Read (decimal, Reader)
+import Lib.Error (ErrorResponse(ErrorResponse, eMessage))
 
 type UserId = Integer
 type Token = ClassyPrelude.Text
@@ -64,3 +67,11 @@ getIntFromText = (value .)
 
 readInt :: Text -> Integer
 readInt = getIntFromText decimal
+
+withUserIdOrErr :: ActionM (Either AuthError UserId)
+withUserIdOrErr = do
+  token :: String <- param "token"
+  liftAndCatchIO $ tokenToUserId (pack token)
+
+invalidTokenJSONResponse :: ActionM ()
+invalidTokenJSONResponse = json $ ErrorResponse { eMessage = "Invalid user token." }
