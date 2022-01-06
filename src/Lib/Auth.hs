@@ -1,16 +1,14 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module Lib.Auth
-  ( tokenToUserId
-  , userIdToToken
+  ( encodeUserIdToToken
   , invalidTokenJSONResponse
   , withUserIdOrErr
-  , AuthError
-  , Token
   , UserId
   ) where
 
-import Web.Scotty (liftAndCatchIO, ActionM, json, param)
-import ClassyPrelude (Utf8 (decodeUtf8), encodeUtf8, readFile, ByteString, Text, pack)
+import GHC.Generics (Generic)
+import Web.Scotty (liftAndCatchIO, ActionM, json, param, header)
+import ClassyPrelude (Utf8 (decodeUtf8), encodeUtf8, readFile, ByteString, Text, pack, LazySequence (toStrict))
 import Database.PostgreSQL.Simple.Newtypes (Aeson(Aeson))
 import qualified Data.Aeson as Aeson
 import qualified System.Environment as ENV
@@ -20,25 +18,34 @@ import Jose.Jwk
 import Jose.Jwt
 import Data.Text.Read (decimal, Reader)
 import Lib.Error (ErrorResponse(ErrorResponse, eMessage))
+import Models.User (User (uId))
+import Data.Aeson (ToJSON(toJSON, toEncoding), KeyValue((.=)), pairs)
+import Prelude hiding (readFile)
 
 type UserId = Integer
-type Token = ClassyPrelude.Text
+type Token = Text
 
 data AuthError
   = TokenDecodeError
   | TokenEncodeError
+  | TokenMissingError
   deriving (Eq, Show)
+
+newtype TokenResponse = TokenResponse { uToken :: Text } deriving Generic
+
+instance ToJSON TokenResponse where
+  toEncoding (TokenResponse uToken) =
+    pairs $ "token" .= uToken
 
 getJwks :: IO [Jwk]
 getJwks = do
-  jwkSig <- ClassyPrelude.readFile ".jwk.sig"
+  jwkSig <- readFile ".jwk.sig"
   let parsedJwkSig = Aeson.eitherDecodeStrict jwkSig
   return $ either (\e -> error "Error: Cannot parse .jwk.sig.") pure parsedJwkSig
 
-tokenToUserId :: Token -> IO (Either AuthError UserId)
-tokenToUserId token = do
+tokenToUserIdOrErr :: Token -> IO (Either AuthError UserId)
+tokenToUserIdOrErr token = do
   jwks <- getJwks
-
   decoded <- Jose.Jwt.decode jwks (Just (JwsEncoding RS256)) (encodeUtf8 token)
   case decoded of
     Left _              -> return $ Left TokenDecodeError
@@ -47,16 +54,21 @@ tokenToUserId token = do
       return $ Right userId
     _ -> return $ Left TokenDecodeError
 
-userIdToToken :: UserId -> IO (Either AuthError Token)
-userIdToToken userId = do
-  jwks <- getJwks
+userIdToTokenOrErr :: UserId -> ActionM (Either AuthError Token)
+userIdToTokenOrErr userId = do
+  liftAndCatchIO $ do
+    jwks <- getJwks
+    let bsUserId = (pack . encodeUtf8) $ show userId
+    encoded <- Jose.Jwt.encode jwks (JwsEncoding RS256) (Claims bsUserId)
+    case encoded of
+      Left je   -> return $ Left TokenEncodeError
+      Right jwt -> return $ Right (getValueFromJwt jwt)
 
-  let bsUserId = (pack . encodeUtf8) $ show userId
-  encoded <- Jose.Jwt.encode jwks (JwsEncoding RS256) (Claims bsUserId)
-
-  case encoded of
-    Left je -> return $ Left TokenEncodeError
-    Right jwt -> return $ Right (getValueFromJwt jwt)
+encodeUserIdToToken :: UserId -> ActionM ()
+encodeUserIdToToken userId = do
+  userIdToTokenOrErr userId >>= \case
+    Left _              -> json $ ErrorResponse { eMessage = "Cannot encode user token." }
+    Right encodedUserId -> json $ TokenResponse { uToken = encodedUserId }
 
 getValueFromJwt :: Jwt -> Text
 getValueFromJwt = decodeUtf8 . unJwt
@@ -70,8 +82,13 @@ readInt = getIntFromText decimal
 
 withUserIdOrErr :: ActionM (Either AuthError UserId)
 withUserIdOrErr = do
-  token :: String <- param "token"
-  liftAndCatchIO $ tokenToUserId (pack token)
+  token <- header "token"
+  case token of
+    Nothing -> return $ Left TokenMissingError
+    Just txt -> liftAndCatchIO $ tokenToUserIdOrErr (toStrict txt)
 
-invalidTokenJSONResponse :: ActionM ()
-invalidTokenJSONResponse = json $ ErrorResponse { eMessage = "Invalid user token." }
+invalidTokenJSONResponse :: AuthError -> ActionM ()
+invalidTokenJSONResponse err = json $ case err of
+  TokenMissingError -> ErrorResponse { eMessage = "Invalid user token." }
+  TokenEncodeError -> ErrorResponse { eMessage = "Cannot encode token." }
+  TokenDecodeError -> ErrorResponse { eMessage = "Cannot decode token." }

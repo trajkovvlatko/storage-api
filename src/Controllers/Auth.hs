@@ -4,35 +4,22 @@ module Controllers.Auth
   , register
   ) where
 
-import GHC.Generics (Generic)
 import Web.Scotty (ActionM, text, liftAndCatchIO, param, json, status)
-import Lib.Auth (userIdToToken, tokenToUserId)
+import Lib.Auth (encodeUserIdToToken)
 import Data.Text.Lazy (Text)
 import Models.User (createUser, findUserByEmail, User (uId, uPassword))
 import ClassyPrelude (unpack, pack, Utf8(encodeUtf8), IsString (fromString), Text)
-import Data.Aeson (ToJSON(toJSON, toEncoding), KeyValue((.=)), pairs)
 import Lib.Error (ErrorResponse (ErrorResponse), eMessage)
 import Data.Hash.MD5 ( md5s, Str(Str) )
-
-newtype TokenResponse = TokenResponse { uToken :: ClassyPrelude.Text } deriving Generic
-
-instance ToJSON TokenResponse where
-  toEncoding (TokenResponse uToken) =
-    pairs $ "token" .= uToken
 
 register :: ActionM ()
 register = do
   paramEmail :: String <- param "email"
   paramPassword :: String <- param "password"
-
   maybeUser <- liftAndCatchIO (createUser paramEmail paramPassword)
   case maybeUser of
     Nothing   -> json $ ErrorResponse { eMessage = "Cannot create a user." }
-    Just user -> do
-      encoded <- (liftAndCatchIO . userIdToToken) $ uId user
-      case encoded of
-        Left _              -> json $ ErrorResponse { eMessage = "Cannot encode user token." }
-        Right encodedUserId -> json $ TokenResponse { uToken = encodedUserId }
+    Just user -> encodeUserIdToToken (uId user)
 
 -- login
 
@@ -51,11 +38,9 @@ loginMaybeUser paramPassword (Just user) = loginResponse user valid
 
 loginResponse :: User -> Bool -> ActionM ()
 loginResponse _    False = json $ ErrorResponse { eMessage = "Invalid password." }
-loginResponse user True  = do
-  encoded <- (liftAndCatchIO . userIdToToken) $ uId user
-  case encoded of
-    Left _              -> json $ ErrorResponse { eMessage = "Cannot encode user token." }
-    Right encodedUserId -> json $ TokenResponse { uToken = encodedUserId }
+loginResponse user True  = encodeUserIdToToken (uId user)
+
+-- helpers
 
 integerToText :: Integer -> ClassyPrelude.Text
 integerToText = pack . show
