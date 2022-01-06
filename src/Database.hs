@@ -12,7 +12,8 @@ import Database.PostgreSQL.Simple
       )
     , Only (..)
     , Connection
-    , close, query_ )
+    , close
+    , query_ )
 import Data.Pool ( Pool, createPool, withResource )
 import qualified System.Environment as ENV
 import ClassyPrelude (MonadIO(liftIO))

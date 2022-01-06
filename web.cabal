@@ -33,6 +33,7 @@ library
       Lib.Auth
       Lib.Error
       Models.Room
+      Models.Storage
       Models.User
       Router
       Server

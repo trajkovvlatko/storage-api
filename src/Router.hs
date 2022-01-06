@@ -26,5 +26,8 @@ routes = do
   delete "/rooms/:id" Rooms.delete
 
   -- Storage routes
-  get "/storages" Storages.index
-  get "/storages/:id" Storages.preview
+  get    "/storages"     Storages.index
+  get    "/storages/:id" Storages.preview
+  post   "/storages"     Storages.create
+  patch  "/storages/:id" Storages.update
+  delete "/storages/:id" Storages.delete

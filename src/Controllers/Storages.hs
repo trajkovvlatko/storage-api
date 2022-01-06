@@ -1,44 +1,56 @@
 module Controllers.Storages
-  (
-    index
+  ( index
   , preview
   , create
+  , update
+  , delete
   ) where
-import qualified Web.Scotty as S
-import GHC.Generics (Generic)
-import Data.Aeson ( ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs )
 
-data Storage = Storage
-  { sId     :: Int
-  , sRoomId :: Int
-  , sName   :: String } deriving Generic
+import Web.Scotty (liftAndCatchIO, ActionM, json, param)
+import Models.Storage (Storage (Storage, sId, sName), getAllStorages, getStorage, createStorage, updateStorage, deleteStorage)
+import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
 
-instance ToJSON Storage where
-  toEncoding (Storage sId sRoomId sName) =
-    pairs $    "id" .= sId
-            <> "room_id" .= sRoomId
-            <> "name" .= sName
-
-index :: S.ActionM ()
+index :: ActionM ()
 index = do
-  S.text "controllers.storages.index"
+  paramRoomId :: Integer <- param "room_id"
+  withUserIdOrErr >>= \case
+    Left err     -> invalidTokenJSONResponse err
+    Right userId -> liftAndCatchIO (getAllStorages userId paramRoomId) >>= json
 
-preview :: S.ActionM ()
+preview :: ActionM ()
 preview = do
-  paramId :: Int <- S.param "id"
-  S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }
+  paramId :: Integer <- param "id"
+  withUserIdOrErr >>= \case
+    Left err     -> invalidTokenJSONResponse err
+    Right userId -> liftAndCatchIO (getStorage userId paramId) >>= resultToJsonResponse
 
-create :: S.ActionM ()
+create :: ActionM ()
 create = do
-  paramId :: Int <- S.param "id"
-  S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }
+  paramName :: String <- param "name"
+  paramRoomId :: Integer <- param "room_id"
+  withUserIdOrErr >>= \case
+    Left err     -> invalidTokenJSONResponse err
+    Right userId -> liftAndCatchIO (createStorage userId paramRoomId paramName) >>= resultToJsonResponse
 
-update :: S.ActionM ()
+update :: ActionM ()
 update = do
-  paramId :: Int <- S.param "id"
-  S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }
+  paramId :: Integer <- param "id"
+  paramRoomId :: Integer <- param "room_id"
+  paramName :: String <- param "name"
+  withUserIdOrErr >>= \case
+    Left err     -> invalidTokenJSONResponse err
+    Right userId -> liftAndCatchIO (updateStorage userId paramId paramRoomId paramName) >>= resultToJsonResponse
 
-delete :: S.ActionM ()
+delete :: ActionM ()
 delete = do
-  paramId :: Int <- S.param "id"
-  S.json $ Storage { sId = paramId, sRoomId = 123, sName = "name" }
+  paramId :: Integer <- param "id"
+  withUserIdOrErr >>= \case
+    Left err     -> invalidTokenJSONResponse err
+    Right userId -> liftAndCatchIO (deleteStorage userId paramId) >>= resultToJsonResponse
+
+-- helper functions
+
+resultToJsonResponse :: Maybe Storage -> ActionM ()
+resultToJsonResponse = \case
+  Nothing   -> json ()
+  Just room -> json room
