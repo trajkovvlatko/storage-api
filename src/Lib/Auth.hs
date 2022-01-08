@@ -20,7 +20,7 @@ import Data.Text.Read (decimal, Reader)
 import Lib.Error (ErrorResponse(ErrorResponse, eMessage))
 import Models.User (User (uId))
 import Data.Aeson (ToJSON(toJSON, toEncoding), KeyValue((.=)), pairs, FromJSON)
-import Prelude hiding (readFile)
+import Prelude hiding (exp, readFile)
 import Data.Time.Clock.POSIX (getPOSIXTime)
 
 -- import Data.Time.Clock.POSIX (getPOSIXTime)
@@ -32,6 +32,8 @@ data AuthError
   = TokenDecodeError
   | TokenEncodeError
   | TokenMissingError
+  | ClaimDecodeError
+  | TokenExpiredError
   deriving (Eq, Show)
 
 newtype TokenResponse = TokenResponse { uToken :: Text } deriving Generic
@@ -57,26 +59,18 @@ tokenToUserIdOrErr token = do
   jwks <- getJwks
   decoded <- Jose.Jwt.decode jwks (Just (JwsEncoding RS256)) (encodeUtf8 token)
   case decoded of
-    Left _              -> return $ Left TokenDecodeError
-    Right (Jws (_, bs)) -> do
-      let claims = decodeUtf8 bs
-      let strict = fromStrict bs
-      let decodedClaims = Aeson.eitherDecode strict :: Either String TokenValue
-      case decodedClaims of
-        Left s -> return $ Left TokenDecodeError
-        Right tv -> return $ Right $ readInt $ pack $ sub tv
-    _ -> return $ Left TokenDecodeError
+    Left _ -> return $ Left TokenDecodeError
+    Right (Jws (_, bs)) -> verifyJWTClaims bs
 
 userIdToTokenOrErr :: UserId -> ActionM (Either AuthError Token)
 userIdToTokenOrErr userId = do
   liftAndCatchIO $ do
     jwks <- getJwks
-    -- let bsUserId = (pack . encodeUtf8) $ show userId
-    curTime <- liftIO getPOSIXTime
+    currentTime <- liftIO getPOSIXTime
     let claim = JwtClaims { jwtIss = Nothing
                           , jwtSub = Just $ tshow userId
                           , jwtAud = Nothing
-                          , jwtExp = Just $ IntDate $ curTime + 10
+                          , jwtExp = Just $ IntDate $ currentTime + 15
                           , jwtNbf = Nothing
                           , jwtIat = Nothing
                           , jwtJti = Nothing
@@ -91,6 +85,21 @@ encodeUserIdToToken userId = do
   userIdToTokenOrErr userId >>= \case
     Left _              -> json $ ErrorResponse { eMessage = "Cannot encode user token." }
     Right encodedUserId -> json $ TokenResponse { uToken = encodedUserId }
+
+verifyJWTClaims :: ByteString -> IO (Either AuthError UserId)
+verifyJWTClaims bs = do
+  let claims = Aeson.eitherDecode (fromStrict bs) :: Either String TokenValue
+  case claims of
+    Left err -> return $ Left ClaimDecodeError
+    Right tokenValue -> verifyClaimExpire tokenValue
+
+verifyClaimExpire :: TokenValue -> IO (Either AuthError UserId)
+verifyClaimExpire tokenValue = do
+  currentTime <- liftIO getPOSIXTime
+  let expireTime = exp tokenValue
+  if expireTime > round currentTime
+    then return $ (Right . readInt . pack . sub) tokenValue
+    else return $ Left TokenExpiredError
 
 getValueFromJwt :: Jwt -> Text
 getValueFromJwt = decodeUtf8 . unJwt
@@ -114,3 +123,5 @@ invalidTokenJSONResponse err = json $ case err of
   TokenMissingError -> ErrorResponse { eMessage = "Invalid user token." }
   TokenEncodeError -> ErrorResponse { eMessage = "Cannot encode token." }
   TokenDecodeError -> ErrorResponse { eMessage = "Cannot decode token." }
+  ClaimDecodeError -> ErrorResponse { eMessage = "Cannot decode claim." }
+  TokenExpiredError -> ErrorResponse { eMessage = "Token expired." }
