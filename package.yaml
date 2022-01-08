@@ -41,6 +41,7 @@ library:
     - jose-jwt
     - text
     - MissingH
+    - time
 
 executables:
   web-exe:

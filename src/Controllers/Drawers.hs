@@ -6,7 +6,7 @@ module Controllers.Drawers
   , delete
   ) where
 
-import Web.Scotty (liftAndCatchIO, ActionM, json, param)
+import Web.Scotty (liftAndCatchIO, ActionM, json, param, params)
 import Models.Drawer (Drawer (Drawer, dId, dLevel, dNote), getAllDrawers, getDrawer, createDrawer, updateDrawer, deleteDrawer)
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
 
@@ -26,6 +26,8 @@ preview = do
 
 create :: ActionM ()
 create = do
+  params <- params
+  liftAndCatchIO (print params)
   paramStorageId :: Integer <- param "storage_id"
   paramLevel :: Integer <- param "level"
   paramNote :: String <- param "name"
