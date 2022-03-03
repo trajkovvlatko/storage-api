@@ -23,8 +23,6 @@ import Data.Aeson (ToJSON(toJSON, toEncoding), KeyValue((.=)), pairs, FromJSON)
 import Prelude hiding (exp, readFile)
 import Data.Time.Clock.POSIX (getPOSIXTime)
 
--- import Data.Time.Clock.POSIX (getPOSIXTime)
-
 type UserId = Integer
 type Token = Text
 
@@ -70,7 +68,7 @@ userIdToTokenOrErr userId = do
     let claim = JwtClaims { jwtIss = Nothing
                           , jwtSub = Just $ tshow userId
                           , jwtAud = Nothing
-                          , jwtExp = Just $ IntDate $ currentTime + 15
+                          , jwtExp = Just $ IntDate $ currentTime + 15000
                           , jwtNbf = Nothing
                           , jwtIat = Nothing
                           , jwtJti = Nothing

@@ -27,6 +27,7 @@ library
   exposed-modules:
       Controllers.Auth
       Controllers.Drawers
+      Controllers.Helpers.Params
       Controllers.Main
       Controllers.Rooms
       Controllers.Storages

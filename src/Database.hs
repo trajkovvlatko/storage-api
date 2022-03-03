@@ -32,14 +32,14 @@ getDatabaseConfig = do
   host <- ENV.getEnv "PG_HOST"
   return $ DbConfig name user password host
 
-withConn :: (Connection -> IO a) -> IO a
-withConn action = do
-  pool <- createPool (getConnection =<< getDatabaseConfig) close 1 10 10
-  withResource pool action
-
 getConnection :: DbConfig -> IO Connection
 getConnection conf = connect defaultConnectInfo { connectUser     = dbUser conf
                                                 , connectPassword = dbPassword conf
                                                 , connectDatabase = dbName conf
                                                 , connectHost     = dbHost conf
                                                 }
+
+withConn :: (Connection -> IO a) -> IO a
+withConn action = do
+  pool <- createPool (getConnection =<< getDatabaseConfig) close 1 10 10
+  withResource pool action

@@ -17,6 +17,11 @@ import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
 import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
 import Control.Exception (try)
 import Lib.Auth (UserId)
+import qualified Data.List as L
+import Data.Maybe (catMaybes)
+import Database.PostgreSQL.Simple.ToField (ToField(toField))
+import ClassyPrelude (IsString(fromString))
+import Web.Scotty (liftAndCatchIO)
 
 data Storage = Storage
   { sId     :: Integer
@@ -49,10 +54,25 @@ createStorage userId paramRoomId paramName = do
   withConn $ \conn -> query conn queryString (userId, paramRoomId, paramName) >>= resultsToMaybeStorage
   where queryString = "INSERT INTO storages (user_id, room_id, name) VALUES (?, ?, ?) RETURNING id, room_id, name"
 
-updateStorage :: UserId -> Integer -> Integer -> String -> IO (Maybe Storage)
+updateStorage :: UserId -> Integer -> Maybe Integer -> Maybe String -> IO (Maybe Storage)
 updateStorage userId paramId paramRoomId paramName = do
-  withConn $ \conn -> query conn queryString (paramName, paramRoomId, paramId, userId) >>= resultsToMaybeStorage
-  where queryString = "UPDATE storages SET name = ?, room_id = ? WHERE id = ? AND user_id = ? RETURNING id, room_id, name"
+  withConn $ \conn -> do
+    let updateList = catMaybes
+          [ const "room_id = ?" <$> paramRoomId
+          , const "name = ?" <$> paramName ]
+        paramList = catMaybes
+          [ toField <$> paramRoomId
+          , toField <$> paramName
+          , toField <$> Just paramId
+          , toField <$> Just userId ]
+        updatesString = if L.null updateList then mempty else mconcat $ L.intersperse ", " updateList
+        updateQueryString = "UPDATE storages SET " <> updatesString <> " WHERE id = ? AND user_id = ? RETURNING id, room_id, name"
+        selectQueryString = "SELECT id, room_id, name FROM storages WHERE id = ? AND user_id = ? LIMIT 1"
+
+    print updateQueryString
+    resultsToMaybeStorage =<< if L.null updateList
+      then query conn selectQueryString (paramId, userId)
+      else query conn updateQueryString paramList
 
 deleteStorage :: UserId -> Integer -> IO (Maybe Storage)
 deleteStorage userId paramId = do

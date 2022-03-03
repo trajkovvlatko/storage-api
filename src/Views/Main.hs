@@ -27,11 +27,28 @@ indexView = (html . renderHtml) $ do
     div ! class_ "container" $ do
       h1 "Storage"
       p "API docs"
+      h3 "Auth"
+      ul $ do
+        li "login: POST /login"
+        li "register: POST /register"
       h3 "Rooms"
       ul $ do
-        li "index"
-        li "show"
+        li "index: GET /rooms"
+        li "show: GET /rooms/:id"
+        li "create: POST /rooms"
+        li "update: PATCH /rooms/:id"
+        li "delete: DELETE /rooms/:id"
       h3 "Storage"
       ul $ do
-        li "index"
-        li "show"
+        li "index: GET /storage"
+        li "show: GET /storage/:id"
+        li "create: POST /storage"
+        li "update: PATCH /storage/:id"
+        li "delete: DELETE /storage/:id"
+      h3 "Drawer"
+      ul $ do
+        li "index: GET /drawer"
+        li "show: GET /drawer/:id"
+        li "create: POST /drawer"
+        li "update: PATCH /drawer/:id"
+        li "delete: DELETE /drawer/:id"

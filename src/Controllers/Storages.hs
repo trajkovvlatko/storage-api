@@ -9,6 +9,9 @@ module Controllers.Storages
 import Web.Scotty (liftAndCatchIO, ActionM, json, param)
 import Models.Storage (Storage (Storage, sId, sName), getAllStorages, getStorage, createStorage, updateStorage, deleteStorage)
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
+import Web.Scotty.Trans (ActionT)
+import ClassyPrelude (Text)
+import Controllers.Helpers.Params (optionalParam, optionalIntegerParam)
 
 index :: ActionM ()
 index = do
@@ -35,8 +38,8 @@ create = do
 update :: ActionM ()
 update = do
   paramId :: Integer <- param "id"
-  paramRoomId :: Integer <- param "room_id"
-  paramName :: String <- param "name"
+  paramRoomId :: Maybe Integer <- optionalIntegerParam "room_id"
+  paramName :: Maybe String <- optionalParam "name"
   withUserIdOrErr >>= \case
     Left err     -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (updateStorage userId paramId paramRoomId paramName) >>= resultToJsonResponse
