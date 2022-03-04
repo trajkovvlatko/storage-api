@@ -4,12 +4,9 @@ module Views.Main
   )
 where
 
-import GHC.Generics (Generic)
-import Text.Blaze.Html (Html, toHtml)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5
-  ( Html
-  , div
+  ( div
   , h1
   , p
   , (!)
@@ -38,17 +35,17 @@ indexView = (html . renderHtml) $ do
         li "create: POST /rooms"
         li "update: PATCH /rooms/:id"
         li "delete: DELETE /rooms/:id"
-      h3 "Storage"
+      h3 "Storage unit"
       ul $ do
-        li "index: GET /storage"
-        li "show: GET /storage/:id"
-        li "create: POST /storage"
-        li "update: PATCH /storage/:id"
-        li "delete: DELETE /storage/:id"
+        li "index: GET /storage_units"
+        li "show: GET /storage_units/:id"
+        li "create: POST /storage_units"
+        li "update: PATCH /storage_units/:id"
+        li "delete: DELETE /storage_units/:id"
       h3 "Drawer"
       ul $ do
-        li "index: GET /drawer"
-        li "show: GET /drawer/:id"
-        li "create: POST /drawer"
-        li "update: PATCH /drawer/:id"
-        li "delete: DELETE /drawer/:id"
+        li "index: GET /drawers"
+        li "show: GET /drawers/:id"
+        li "create: POST /drawers"
+        li "update: PATCH /drawers/:id"
+        li "delete: DELETE /drawers/:id"

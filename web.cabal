@@ -30,13 +30,13 @@ library
       Controllers.Helpers.Params
       Controllers.Main
       Controllers.Rooms
-      Controllers.Storages
+      Controllers.StorageUnits
       Database
       Lib.Auth
       Lib.Error
       Models.Drawer
       Models.Room
-      Models.Storage
+      Models.StorageUnit
       Models.User
       Router
       Server

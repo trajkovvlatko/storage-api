@@ -13,10 +13,10 @@ import Controllers.Helpers.Params (optionalIntegerParam, optionalParam)
 
 index :: ActionM ()
 index = do
-  paramStorageId :: Integer <- param "storage_id"
+  paramStorageUnitId :: Integer <- param "storage_unit_id"
   withUserIdOrErr >>= \case
     Left err     -> invalidTokenJSONResponse err
-    Right userId -> liftAndCatchIO (getAllDrawers userId paramStorageId) >>= json
+    Right userId -> liftAndCatchIO (getAllDrawers userId paramStorageUnitId) >>= json
 
 preview :: ActionM ()
 preview = do
@@ -27,22 +27,22 @@ preview = do
 
 create :: ActionM ()
 create = do
-  paramStorageId :: Integer <- param "storage_id"
+  paramStorageUnitId :: Integer <- param "storage_unit_id"
   paramLevel :: Integer <- param "level"
   paramNote :: String <- param "name"
   withUserIdOrErr >>= \case
     Left err     -> invalidTokenJSONResponse err
-    Right userId -> liftAndCatchIO (createDrawer userId paramStorageId paramLevel paramNote) >>= resultToJsonResponse
+    Right userId -> liftAndCatchIO (createDrawer userId paramStorageUnitId paramLevel paramNote) >>= resultToJsonResponse
 
 update :: ActionM ()
 update = do
   paramId :: Integer <- param "id"
-  paramStorageId :: Maybe Integer <- optionalIntegerParam "storage_id"
+  paramStorageUnitId :: Maybe Integer <- optionalIntegerParam "storage_unit_id"
   paramLevel :: Maybe Integer <- optionalIntegerParam "level"
   paramNote :: Maybe String <- optionalParam "note"
   withUserIdOrErr >>= \case
     Left err     -> invalidTokenJSONResponse err
-    Right userId -> liftAndCatchIO (updateDrawer userId paramId paramStorageId paramLevel paramNote) >>= resultToJsonResponse
+    Right userId -> liftAndCatchIO (updateDrawer userId paramId paramStorageUnitId paramLevel paramNote) >>= resultToJsonResponse
 
 delete :: ActionM ()
 delete = do

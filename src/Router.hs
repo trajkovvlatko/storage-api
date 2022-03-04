@@ -5,7 +5,7 @@ where
 
 import Web.Scotty as S ( get, post, ScottyM, patch, delete )
 import qualified Controllers.Main as Main
-import qualified Controllers.Storages as Storages
+import qualified Controllers.StorageUnits as StorageUnits
 import qualified Controllers.Rooms as Rooms
 import qualified Controllers.Drawers as Drawers
 import qualified Controllers.Auth as Auth
@@ -26,12 +26,12 @@ routes = do
   patch  "/rooms/:id" Rooms.update
   delete "/rooms/:id" Rooms.delete
 
-  -- Storage routes
-  get    "/storages"     Storages.index
-  get    "/storages/:id" Storages.preview
-  post   "/storages"     Storages.create
-  patch  "/storages/:id" Storages.update
-  delete "/storages/:id" Storages.delete
+  -- StorageUnits routes
+  get    "/storage_units"     StorageUnits.index
+  get    "/storage_units/:id" StorageUnits.preview
+  post   "/storage_units"     StorageUnits.create
+  patch  "/storage_units/:id" StorageUnits.update
+  delete "/storage_units/:id" StorageUnits.delete
 
   -- Drawer routes
   get    "/drawers"     Drawers.index
