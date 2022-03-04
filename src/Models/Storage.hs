@@ -12,16 +12,13 @@ module Models.Storage
 
 import GHC.Generics (Generic)
 import Database (withConn)
-import Database.PostgreSQL.Simple (query_, query, Only (Only), SqlError)
+import Database.PostgreSQL.Simple (query)
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
-import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
-import Control.Exception (try)
+import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs)
 import Lib.Auth (UserId)
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
 import Database.PostgreSQL.Simple.ToField (ToField(toField))
-import ClassyPrelude (IsString(fromString))
-import Web.Scotty (liftAndCatchIO)
 
 data Storage = Storage
   { sId     :: Integer
@@ -32,10 +29,10 @@ instance FromRow Storage where
   fromRow = Storage <$> field <*> field <*> field
 
 instance ToJSON Storage where
-  toEncoding (Storage sId sRoomId sName) =
-    pairs $    "id"      .= sId
-            <> "room_id" .= sRoomId
-            <> "name"    .= sName
+  toEncoding (Storage id' roomId name) =
+    pairs $    "id"      .= id'
+            <> "room_id" .= roomId
+            <> "name"    .= name
 
 -- queries
 

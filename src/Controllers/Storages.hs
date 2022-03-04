@@ -7,10 +7,8 @@ module Controllers.Storages
   ) where
 
 import Web.Scotty (liftAndCatchIO, ActionM, json, param)
-import Models.Storage (Storage (Storage, sId, sName), getAllStorages, getStorage, createStorage, updateStorage, deleteStorage)
+import Models.Storage (Storage, getAllStorages, getStorage, createStorage, updateStorage, deleteStorage)
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
-import Web.Scotty.Trans (ActionT)
-import ClassyPrelude (Text)
 import Controllers.Helpers.Params (optionalParam, optionalIntegerParam)
 
 index :: ActionM ()

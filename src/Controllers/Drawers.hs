@@ -6,8 +6,8 @@ module Controllers.Drawers
   , delete
   ) where
 
-import Web.Scotty (liftAndCatchIO, ActionM, json, param, params)
-import Models.Drawer (Drawer (Drawer, dId, dLevel, dNote), getAllDrawers, getDrawer, createDrawer, updateDrawer, deleteDrawer)
+import Web.Scotty (liftAndCatchIO, ActionM, json, param)
+import Models.Drawer (Drawer, getAllDrawers, getDrawer, createDrawer, updateDrawer, deleteDrawer)
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
 import Controllers.Helpers.Params (optionalIntegerParam, optionalParam)
 

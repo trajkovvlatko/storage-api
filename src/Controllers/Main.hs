@@ -4,7 +4,7 @@ import Views.Main
   (
     indexView
   )
-import Web.Scotty ( ActionM, text )
+import Web.Scotty ( ActionM )
 
 index :: ActionM ()
 index = indexView

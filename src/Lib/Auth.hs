@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+
 module Lib.Auth
   ( encodeUserIdToToken
   , invalidTokenJSONResponse
@@ -6,19 +8,15 @@ module Lib.Auth
   ) where
 
 import GHC.Generics (Generic)
-import Web.Scotty (liftAndCatchIO, ActionM, json, param, header)
-import ClassyPrelude (Utf8 (decodeUtf8), encodeUtf8, readFile, ByteString, Text, pack, LazySequence (toStrict, fromStrict), tshow, MonadIO (liftIO), first)
-import Database.PostgreSQL.Simple.Newtypes (Aeson(Aeson))
+import Web.Scotty (liftAndCatchIO, ActionM, json, header)
+import ClassyPrelude (Utf8 (decodeUtf8), encodeUtf8, readFile, ByteString, Text, pack, LazySequence (toStrict, fromStrict), tshow, MonadIO (liftIO))
 import qualified Data.Aeson as Aeson
-import qualified System.Environment as ENV
-import Jose.Jwe
 import Jose.Jwa
 import Jose.Jwk
 import Jose.Jwt
 import Data.Text.Read (decimal, Reader)
 import Lib.Error (ErrorResponse(ErrorResponse, eMessage))
-import Models.User (User (uId))
-import Data.Aeson (ToJSON(toJSON, toEncoding), KeyValue((.=)), pairs, FromJSON)
+import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs, FromJSON)
 import Prelude hiding (exp, readFile)
 import Data.Time.Clock.POSIX (getPOSIXTime)
 
@@ -42,14 +40,14 @@ data TokenValue = TokenValue { sub :: String
 instance FromJSON TokenValue
 
 instance ToJSON TokenResponse where
-  toEncoding (TokenResponse uToken) =
-    pairs $ "token" .= uToken
+  toEncoding (TokenResponse token) =
+    pairs $ "token" .= token
 
 getJwks :: IO [Jwk]
 getJwks = do
   jwkSig <- readFile ".jwk.sig"
   let parsedJwkSig = Aeson.eitherDecodeStrict jwkSig
-  return $ either (\e -> error "Error: Cannot parse .jwk.sig.") pure parsedJwkSig
+  return $ either (\_ -> error "Error: Cannot parse .jwk.sig.") pure parsedJwkSig
 
 tokenToUserIdOrErr :: Token -> IO (Either AuthError UserId)
 tokenToUserIdOrErr token = do
@@ -58,6 +56,7 @@ tokenToUserIdOrErr token = do
   case decoded of
     Left _ -> return $ Left TokenDecodeError
     Right (Jws (_, bs)) -> verifyJWTClaims bs
+    _ -> return $ Left TokenDecodeError
 
 userIdToTokenOrErr :: UserId -> ActionM (Either AuthError Token)
 userIdToTokenOrErr userId = do
@@ -74,7 +73,7 @@ userIdToTokenOrErr userId = do
                           }
     encoded <- Jose.Jwt.encode jwks (JwsEncoding RS256) (Claims . toStrict . Aeson.encode $ claim)
     case encoded of
-      Left je   -> return $ Left TokenEncodeError
+      Left  _   -> return $ Left TokenEncodeError
       Right jwt -> return $ Right (getValueFromJwt jwt)
 
 encodeUserIdToToken :: UserId -> ActionM ()
@@ -87,7 +86,7 @@ verifyJWTClaims :: ByteString -> IO (Either AuthError UserId)
 verifyJWTClaims bs = do
   let claims = Aeson.eitherDecode (fromStrict bs) :: Either String TokenValue
   case claims of
-    Left err -> return $ Left ClaimDecodeError
+    Left _           -> return $ Left ClaimDecodeError
     Right tokenValue -> verifyClaimExpire tokenValue
 
 verifyClaimExpire :: TokenValue -> IO (Either AuthError UserId)

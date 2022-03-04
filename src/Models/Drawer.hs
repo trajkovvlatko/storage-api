@@ -13,10 +13,9 @@ module Models.Drawer
 
 import GHC.Generics (Generic)
 import Database (withConn)
-import Database.PostgreSQL.Simple (query_, query, Only (Only), SqlError)
+import Database.PostgreSQL.Simple (query)
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
-import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
-import Control.Exception (try)
+import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs)
 import Lib.Auth (UserId)
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
@@ -32,11 +31,11 @@ instance FromRow Drawer where
   fromRow = Drawer <$> field <*> field <*> field <*> field
 
 instance ToJSON Drawer where
-  toEncoding (Drawer dId dStorageId dLevel dNote) =
-    pairs $    "id"         .= dId
-            <> "storage_id" .= dStorageId
-            <> "level"      .= dLevel
-            <> "note"       .= dNote
+  toEncoding (Drawer id' storageId level note) =
+    pairs $    "id"         .= id'
+            <> "storage_id" .= storageId
+            <> "level"      .= level
+            <> "note"       .= note
 
 -- queries
 

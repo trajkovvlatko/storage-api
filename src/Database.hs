@@ -10,13 +10,10 @@ import Database.PostgreSQL.Simple
       , connectDatabase
       , connectHost
       )
-    , Only (..)
     , Connection
-    , close
-    , query_ )
-import Data.Pool ( Pool, createPool, withResource )
+    , close)
+import Data.Pool ( createPool, withResource )
 import qualified System.Environment as ENV
-import ClassyPrelude (MonadIO(liftIO))
 
 data DbConfig = DbConfig { dbName     :: String
                          , dbUser     :: String

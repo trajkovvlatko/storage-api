@@ -7,7 +7,7 @@ module Controllers.Rooms
   ) where
 
 import Web.Scotty (liftAndCatchIO, ActionM, json, param)
-import Models.Room (Room (Room, rId, rName), getAllRooms, getRoom, createRoom, updateRoom, deleteRoom)
+import Models.Room (Room, getAllRooms, getRoom, createRoom, updateRoom, deleteRoom)
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
 
 index :: ActionM ()

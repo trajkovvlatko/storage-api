@@ -13,10 +13,8 @@ import Database (withConn)
 import Database.PostgreSQL.Simple (query, FromRow, SqlError)
 import GHC.Generics (Generic)
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
-import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
-import ClassyPrelude (unpack, pack)
+import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs)
 import Control.Exception (try)
-import Data.Monoid (Any)
 import Data.Hash.MD5 ( md5s, Str(Str) )
 
 data User = User
@@ -28,9 +26,9 @@ instance FromRow User where
   fromRow = User <$> field <*> field <*> field
 
 instance ToJSON User where
-  toEncoding (User uId uEmail uPassword) =
-    pairs $    "id"    .= uId
-            <> "email" .= uEmail
+  toEncoding (User id' email _) =
+    pairs $    "id"    .= id'
+            <> "email" .= email
 
 createUser :: String -> String -> IO (Maybe User)
 createUser paramEmail paramPassword = do

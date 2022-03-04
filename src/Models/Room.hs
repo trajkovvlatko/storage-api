@@ -12,10 +12,9 @@ module Models.Room
 
 import GHC.Generics (Generic)
 import Database (withConn)
-import Database.PostgreSQL.Simple (query_, query, Only (Only), SqlError)
+import Database.PostgreSQL.Simple (query, Only (Only))
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
-import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
-import Control.Exception (try)
+import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs)
 import Lib.Auth (UserId)
 
 data Room = Room
@@ -26,9 +25,9 @@ instance FromRow Room where
   fromRow = Room <$> field <*> field
 
 instance ToJSON Room where
-  toEncoding (Room rId rName) =
-    pairs $    "id"   .= rId
-            <> "name" .= rName
+  toEncoding (Room id' name) =
+    pairs $    "id"   .= id'
+            <> "name" .= name
 
 -- queries
 
