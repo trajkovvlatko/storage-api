@@ -18,6 +18,9 @@ import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
 import Data.Aeson (ToJSON(toJSON, toEncoding), object, KeyValue((.=)), pairs)
 import Control.Exception (try)
 import Lib.Auth (UserId)
+import qualified Data.List as L
+import Data.Maybe (catMaybes)
+import Database.PostgreSQL.Simple.ToField (ToField(toField))
 
 data Drawer = Drawer
   { dId        :: Integer
@@ -52,10 +55,26 @@ createDrawer userId paramStorageId paramLevel paramNote = do
   withConn $ \conn -> query conn queryString (userId, paramStorageId, paramLevel, paramNote) >>= resultsToMaybeDrawer
   where queryString = "INSERT INTO drawers (user_id, storage_id, level, note) VALUES (?, ?, ?, ?) RETURNING id, storage_id, level, note"
 
-updateDrawer :: UserId -> Integer -> Integer -> Integer -> String -> IO (Maybe Drawer)
+updateDrawer :: UserId -> Integer -> Maybe Integer -> Maybe Integer -> Maybe String -> IO (Maybe Drawer)
 updateDrawer userId paramId paramStorageId paramLevel paramNote = do
-  withConn $ \conn -> query conn queryString (paramStorageId, paramLevel, paramNote, paramId, userId) >>= resultsToMaybeDrawer
-  where queryString = "UPDATE drawers SET storage_id = ?, level = ?, note = ? WHERE id = ? AND user_id = ? RETURNING id, storage_id, level, note"
+  withConn $ \conn -> do
+    let updateList = catMaybes
+          [ const "storage_id = ?" <$> paramStorageId
+          , const "level = ?" <$> paramLevel
+          , const "note = ?" <$> paramNote ]
+        paramList = catMaybes
+          [ toField <$> paramStorageId
+          , toField <$> paramLevel
+          , toField <$> paramNote
+          , toField <$> Just paramId
+          , toField <$> Just userId ]
+        updatesString = if L.null updateList then mempty else mconcat $ L.intersperse ", " updateList
+        updateQueryString = "UPDATE drawers SET " <> updatesString <> " WHERE id = ? AND user_id = ? RETURNING id, storage_id, level, note"
+        selectQueryString = "SELECT id, storage_id, level, note FROM drawers WHERE id = ? AND user_id = ? LIMIT 1"
+
+    resultsToMaybeDrawer =<< if L.null updateList
+      then query conn selectQueryString (paramId, userId)
+      else query conn updateQueryString paramList
 
 deleteDrawer :: UserId -> Integer -> IO (Maybe Drawer)
 deleteDrawer userId paramId = do

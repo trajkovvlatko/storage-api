@@ -69,7 +69,6 @@ updateStorage userId paramId paramRoomId paramName = do
         updateQueryString = "UPDATE storages SET " <> updatesString <> " WHERE id = ? AND user_id = ? RETURNING id, room_id, name"
         selectQueryString = "SELECT id, room_id, name FROM storages WHERE id = ? AND user_id = ? LIMIT 1"
 
-    print updateQueryString
     resultsToMaybeStorage =<< if L.null updateList
       then query conn selectQueryString (paramId, userId)
       else query conn updateQueryString paramList

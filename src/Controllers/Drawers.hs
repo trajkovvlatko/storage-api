@@ -9,6 +9,7 @@ module Controllers.Drawers
 import Web.Scotty (liftAndCatchIO, ActionM, json, param, params)
 import Models.Drawer (Drawer (Drawer, dId, dLevel, dNote), getAllDrawers, getDrawer, createDrawer, updateDrawer, deleteDrawer)
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
+import Controllers.Helpers.Params (optionalIntegerParam, optionalParam)
 
 index :: ActionM ()
 index = do
@@ -26,8 +27,6 @@ preview = do
 
 create :: ActionM ()
 create = do
-  params <- params
-  liftAndCatchIO (print params)
   paramStorageId :: Integer <- param "storage_id"
   paramLevel :: Integer <- param "level"
   paramNote :: String <- param "name"
@@ -38,9 +37,9 @@ create = do
 update :: ActionM ()
 update = do
   paramId :: Integer <- param "id"
-  paramStorageId :: Integer <- param "storage_id"
-  paramLevel :: Integer <- param "level"
-  paramNote :: String <- param "name"
+  paramStorageId :: Maybe Integer <- optionalIntegerParam "storage_id"
+  paramLevel :: Maybe Integer <- optionalIntegerParam "level"
+  paramNote :: Maybe String <- optionalParam "note"
   withUserIdOrErr >>= \case
     Left err     -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (updateDrawer userId paramId paramStorageId paramLevel paramNote) >>= resultToJsonResponse
