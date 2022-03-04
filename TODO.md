@@ -1,3 +1,1 @@
-- Improve login and register functions in Controllers/Auth
 - Use Data.Password.Bcrypt for password
-- Refresh auth token

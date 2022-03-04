@@ -1,20 +1,17 @@
-{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module Controllers.Auth
   ( login
   , register
   ) where
 
-import Web.Scotty (ActionM, text, liftAndCatchIO, param, json, status)
+import Web.Scotty (ActionM, liftAndCatchIO, param, json)
 import Lib.Auth (encodeUserIdToToken)
-import Data.Text.Lazy (Text)
 import Models.User (createUser, findUserByEmail, User (uId, uPassword))
-import ClassyPrelude (unpack, pack, Utf8(encodeUtf8), IsString (fromString), Text)
 import Lib.Error (ErrorResponse (ErrorResponse), eMessage)
 import Data.Hash.MD5 ( md5s, Str(Str) )
 
 register :: ActionM ()
 register = do
-  paramEmail :: String <- param "email"
+  paramEmail :: String    <- param "email"
   paramPassword :: String <- param "password"
   maybeUser <- liftAndCatchIO (createUser paramEmail paramPassword)
   case maybeUser of
@@ -25,9 +22,10 @@ register = do
 
 login :: ActionM ()
 login = do
-  paramEmail :: String <- param "email"
+  paramEmail :: String    <- param "email"
   paramPassword :: String <- param "password"
-  liftAndCatchIO (findUserByEmail paramEmail) >>= loginMaybeUser paramPassword
+  maybeUser <- liftAndCatchIO (findUserByEmail paramEmail)
+  loginMaybeUser paramPassword maybeUser
   
 -- helper functions
 
@@ -39,8 +37,3 @@ loginMaybeUser paramPassword (Just user) = loginResponse user valid
 loginResponse :: User -> Bool -> ActionM ()
 loginResponse _    False = json $ ErrorResponse { eMessage = "Invalid password." }
 loginResponse user True  = encodeUserIdToToken (uId user)
-
--- helpers
-
-integerToText :: Integer -> ClassyPrelude.Text
-integerToText = pack . show
