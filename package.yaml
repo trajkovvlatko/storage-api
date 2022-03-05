@@ -29,6 +29,11 @@ dependencies:
   - base >= 4.7 && < 5
   - classy-prelude
   - dotenv
+  - wai
+  - warp
+  - hspec
+  - hspec-wai
+  - hspec-wai-json
 
 library:
   source-dirs: src

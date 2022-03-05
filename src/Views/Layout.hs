@@ -5,15 +5,13 @@ where
 
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html5
-  ( Html
-  , body
+  ( body
   , docTypeHtml
   , head
   , meta
   , (!)
   )
 import Text.Blaze.Html5.Attributes ( charset )
-import Web.Scotty ( ActionM )
 import Prelude hiding ( div, head, id )
 
 layoutView :: Html -> Html

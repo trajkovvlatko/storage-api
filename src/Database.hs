@@ -23,7 +23,9 @@ data DbConfig = DbConfig { dbName     :: String
 
 getDatabaseConfig :: IO DbConfig
 getDatabaseConfig = do
-  name <- ENV.getEnv "PG_DB"
+  env <- ENV.getEnv "ENV"
+  let pgDbName = if env == "test" then "PG_TEST_DB" else "PG_DB"
+  name <- ENV.getEnv pgDbName
   user <- ENV.getEnv "PG_USER"
   password <- ENV.getEnv "PG_PASS"
   host <- ENV.getEnv "PG_HOST"
