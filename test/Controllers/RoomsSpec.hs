@@ -6,6 +6,7 @@ module Controllers.RoomsSpec
 where
 
 import Server ( app )
+
 import Controllers.Rooms
 
 import Test.Hspec

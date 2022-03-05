@@ -34,6 +34,7 @@ dependencies:
   - hspec
   - hspec-wai
   - hspec-wai-json
+  - postgresql-simple
 
 library:
   source-dirs: src
@@ -41,7 +42,6 @@ library:
     - scotty
     - aeson
     - blaze-html
-    - postgresql-simple
     - resource-pool
     - jose-jwt
     - text

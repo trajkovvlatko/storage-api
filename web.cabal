@@ -90,6 +90,7 @@ executable web-exe
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , postgresql-simple
     , wai
     , warp
     , web
@@ -116,6 +117,7 @@ test-suite web-test
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , postgresql-simple
     , wai
     , warp
     , web

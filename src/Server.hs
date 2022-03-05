@@ -1,6 +1,7 @@
 module Server
   ( runApp
   , app
+  , loadEnv
   )
 where
 
@@ -16,9 +17,10 @@ loadEnv :: IO [(String, String)]
 loadEnv = loadFile defaultConfig
 
 app :: IO Application
-app = scottyApp routes
+app = do
+  _ <- loadEnv
+  scottyApp routes
 
 runApp :: IO ()
 runApp = do
-  _ <- loadEnv
   app >>= run 3000
