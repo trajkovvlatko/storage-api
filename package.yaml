@@ -15,6 +15,7 @@ default-extensions:
 - ScopedTypeVariables
 - DeriveGeneric
 - LambdaCase
+- QuasiQuotes
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -30,22 +31,24 @@ dependencies:
   - classy-prelude
   - dotenv
   - wai
+  - wai-extra
   - warp
   - hspec
   - hspec-wai
   - hspec-wai-json
   - postgresql-simple
+  - MissingH
+  - aeson
+  - bytestring
 
 library:
   source-dirs: src
   dependencies:
     - scotty
-    - aeson
     - blaze-html
     - resource-pool
     - jose-jwt
     - text
-    - MissingH
     - time
 
 executables:
