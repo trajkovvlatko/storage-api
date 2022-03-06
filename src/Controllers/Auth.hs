@@ -7,7 +7,8 @@ import Web.Scotty (ActionM, liftAndCatchIO, param, json)
 import Lib.Auth (encodeUserIdToToken)
 import Models.User (createUser, findUserByEmail, User (uId, uPassword))
 import Lib.Error (ErrorResponse (ErrorResponse), eMessage)
-import Data.Hash.MD5 ( md5s, Str(Str) )
+import Data.Password.Bcrypt (PasswordCheck(PasswordCheckSuccess), mkPassword, hashPassword, checkPassword, PasswordHash (PasswordHash), Bcrypt)
+import ClassyPrelude (MonadIO(liftIO), pack, unpack)
 
 register :: ActionM ()
 register = do
@@ -29,11 +30,17 @@ login = do
   
 -- helper functions
 
+verify :: String -> String -> IO PasswordCheck
+verify paramPassword userPassword = do
+  let pass = mkPassword $ pack paramPassword
+  return $ checkPassword pass (PasswordHash $ pack userPassword)
+
 loginMaybeUser :: String -> Maybe User -> ActionM ()
 loginMaybeUser _ Nothing = json $ ErrorResponse { eMessage = "Cannot find user." }
-loginMaybeUser paramPassword (Just user) = loginResponse user valid
-  where valid = uPassword user == md5s (Str paramPassword)
+loginMaybeUser paramPassword (Just user) = do
+  valid <- liftIO $ verify paramPassword (uPassword user)
+  loginResponse user valid
 
-loginResponse :: User -> Bool -> ActionM ()
-loginResponse _    False = json $ ErrorResponse { eMessage = "Invalid password." }
-loginResponse user True  = encodeUserIdToToken (uId user)
+loginResponse :: User -> PasswordCheck -> ActionM ()
+loginResponse user PasswordCheckSuccess = encodeUserIdToToken (uId user)
+loginResponse _    _                    = json $ ErrorResponse { eMessage = "Invalid password." }

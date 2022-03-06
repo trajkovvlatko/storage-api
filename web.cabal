@@ -64,6 +64,7 @@ library
     , hspec-wai
     , hspec-wai-json
     , jose-jwt
+    , password
     , postgresql-simple
     , resource-pool
     , scotty
@@ -97,6 +98,7 @@ executable web-exe
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , password
     , postgresql-simple
     , wai
     , wai-extra
@@ -131,6 +133,7 @@ test-suite web-test
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , password
     , postgresql-simple
     , wai
     , wai-extra

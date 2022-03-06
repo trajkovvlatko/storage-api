@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-missing-fields #-}
-
 module Models.User
   ( createUser
   , findUserByEmail
@@ -15,7 +13,8 @@ import GHC.Generics (Generic)
 import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
 import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs)
 import Control.Exception (try)
-import Data.Hash.MD5 ( md5s, Str(Str) )
+import ClassyPrelude (Text, unpack, IsString (fromString))
+import Data.Password.Bcrypt (hashPassword, mkPassword, PasswordHash (unPasswordHash), Bcrypt)
 
 data User = User
   { uId       :: Integer
@@ -30,9 +29,14 @@ instance ToJSON User where
     pairs $    "id"    .= id'
             <> "email" .= email
 
+getPasswordHash :: String -> IO (PasswordHash Bcrypt)
+getPasswordHash password = hashPassword (mkPassword (fromString password))
+
 createUser :: String -> String -> IO (Maybe User)
 createUser paramEmail paramPassword = do
-  resultsToMaybeUser =<< withConn (\conn -> try $ query conn queryString [paramEmail, md5s $ Str paramPassword])
+  passwordHash <- getPasswordHash paramPassword
+  let passwordString = unpack $ unPasswordHash passwordHash
+  resultsToMaybeUser =<< withConn (\conn -> try $ query conn queryString [paramEmail, passwordString])
   where
     queryString = "INSERT INTO users (email, password) VALUES (?, ?) RETURNING id, email, password"
 

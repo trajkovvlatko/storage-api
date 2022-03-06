@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-
 module Lib.Auth
   ( encodeUserIdToToken
   , invalidTokenJSONResponse
@@ -100,12 +98,10 @@ verifyClaimExpire tokenValue = do
 getValueFromJwt :: Jwt -> Text
 getValueFromJwt = decodeUtf8 . unJwt
 
-getIntFromText :: Reader a -> Text -> a
-getIntFromText = (value .)
-  where value (Right (v,_)) = v
-
 readInt :: Text -> Integer
-readInt = getIntFromText decimal
+readInt = value . decimal
+  where value (Right (v, k)) = v
+        value (Left _) = -1
 
 withUserIdOrErr :: ActionM (Either AuthError UserId)
 withUserIdOrErr = do

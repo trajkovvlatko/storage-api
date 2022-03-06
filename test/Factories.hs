@@ -7,16 +7,16 @@ where
 import Lib.Auth (UserId)
 import Database (withConn)
 import Database.PostgreSQL.Simple (Only (Only), query_)
-import ClassyPrelude (fromString)
-import Data.Hash.MD5 ( md5s, Str(Str) )
+import ClassyPrelude (fromString, unpack)
+import Data.Password.Bcrypt (hashPassword, mkPassword, PasswordHash (unPasswordHash))
 
 createUser :: String -> String -> IO UserId
 createUser email password = do
+  passwordHash <- hashPassword (mkPassword (fromString password))
+  let passwordString = unpack $ unPasswordHash passwordHash
+      queryString = "INSERT INTO users (email, password) VALUES ('" ++ email ++ "', '" ++ passwordString ++ "') RETURNING id"
   [Only userId] <- withConn (\conn -> query_  conn (fromString queryString))
   return userId
-  where
-    md5Password = md5s $ Str password
-    queryString = "INSERT INTO users (email, password) VALUES ('" ++ email ++ "', '" ++ md5Password ++ "') RETURNING id"
 
 createRoom :: UserId -> String -> IO (Integer, String)
 createRoom userId name = do
