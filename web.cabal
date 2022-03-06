@@ -109,6 +109,8 @@ test-suite web-test
   main-is: Spec.hs
   other-modules:
       Controllers.RoomsSpec
+      Factories
+      Helpers
       Paths_web
   hs-source-dirs:
       test
