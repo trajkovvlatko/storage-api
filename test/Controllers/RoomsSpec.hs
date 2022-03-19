@@ -1,19 +1,15 @@
-module Controllers.RoomsSpec
-  ( spec )
+module Controllers.RoomsSpec (spec) where
 
-where
-
-import Server ( app )
+import ClassyPrelude (IsString (fromString), MonadIO (liftIO))
 import Controllers.Rooms
-
+import Factories (createRoom, createUser)
+import Helpers (getToken, loginUser, shouldContainString)
+import Network.HTTP.Types
+import qualified Network.Wai.Test as WT
+import Server (app)
 import Test.Hspec
 import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
-import Factories (createUser, createRoom)
-import Helpers (loginUser, getToken, shouldContainString)
-import ClassyPrelude (IsString(fromString), MonadIO (liftIO))
-import Network.HTTP.Types
-import qualified Network.Wai.Test as WT
 
 contentType = ("Content-Type", "application/x-www-form-urlencoded")
 
@@ -96,7 +92,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         let postBody = "name=2323"
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPost "/rooms" headers postBody
 
@@ -132,7 +128,7 @@ spec = with app $ do
         (roomId, roomName) <- liftIO $ createRoom userId "room1"
         let patchBody = "name=updated-name"
         let url = fromString $ "/rooms/" ++ show roomId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers patchBody
         body <- fmap WT.simpleBody response
@@ -159,7 +155,7 @@ spec = with app $ do
         loginResponse <- loginUser
         (roomId, roomName) <- liftIO $ createRoom userId "room1"
         let url = fromString $ "/rooms/" ++ show roomId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodDelete url headers ""
 

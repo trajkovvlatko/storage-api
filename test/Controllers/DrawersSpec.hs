@@ -1,19 +1,15 @@
-module Controllers.DrawersSpec
-  ( spec )
+module Controllers.DrawersSpec (spec) where
 
-where
-
-import Server ( app )
+import ClassyPrelude (IsString (fromString), MonadIO (liftIO))
 import Controllers.Drawers
-
+import Factories (createDrawer, createRoom, createStorageUnit, createUser)
+import Helpers (getToken, loginUser, shouldContainString)
+import Network.HTTP.Types
+import qualified Network.Wai.Test as WT
+import Server (app)
 import Test.Hspec
 import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
-import Factories (createUser, createStorageUnit, createDrawer, createRoom)
-import Helpers (loginUser, getToken, shouldContainString)
-import ClassyPrelude (IsString(fromString), MonadIO (liftIO))
-import Network.HTTP.Types
-import qualified Network.Wai.Test as WT
 
 contentType = ("Content-Type", "application/x-www-form-urlencoded")
 
@@ -111,7 +107,7 @@ spec = with app $ do
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
         let url = fromString $ "/storage_units/" ++ show storageUnitId ++ "/drawers"
 
         let response = request methodPost url headers ""
@@ -124,7 +120,7 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         let postBody = fromString "note=note1&level=123"
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
         let url = fromString $ "/storage_units/" ++ show storageUnitId ++ "/drawers"
 
         let response = request methodPost url headers postBody
@@ -142,7 +138,7 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom otherUserId "room1"
         (storageUnitId, _) <- liftIO $ createStorageUnit otherUserId roomId "storageUnit1"
         let postBody = fromString "note=note1&level=123"
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
         let url = fromString $ "/storage_units/" ++ show storageUnitId ++ "/drawers"
 
         let response = request methodPost url headers postBody
@@ -172,7 +168,7 @@ spec = with app $ do
         (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show drawerId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers ""
         body <- fmap WT.simpleBody response
@@ -191,7 +187,7 @@ spec = with app $ do
         (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
         let patchBody = "note=updated-note&level=123"
         let url = fromString $ "/drawers/" ++ show drawerId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers patchBody
         body <- fmap WT.simpleBody response
@@ -210,7 +206,7 @@ spec = with app $ do
         (drawerId, _, _) <- liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer1"
         let patchBody = "note=updated-note&level=123"
         let url = fromString $ "/drawers/" ++ show drawerId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers patchBody
 
@@ -240,7 +236,7 @@ spec = with app $ do
         (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show drawerId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodDelete url headers ""
 
@@ -258,7 +254,7 @@ spec = with app $ do
         (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit1"
         (otherDrawerId, _, _) <- liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show otherDrawerId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodDelete url headers ""
 

@@ -1,25 +1,27 @@
 module Lib.Auth
-  ( encodeUserIdToToken
-  , invalidTokenJSONResponse
-  , withUserIdOrErr
-  , UserId
-  ) where
+  ( encodeUserIdToToken,
+    invalidTokenJSONResponse,
+    withUserIdOrErr,
+    UserId,
+  )
+where
 
-import GHC.Generics (Generic)
-import Web.Scotty (liftAndCatchIO, ActionM, json, header, status)
-import ClassyPrelude (Utf8 (decodeUtf8), encodeUtf8, readFile, ByteString, Text, pack, LazySequence (toStrict, fromStrict), tshow, MonadIO (liftIO))
+import ClassyPrelude (ByteString, LazySequence (fromStrict, toStrict), MonadIO (liftIO), Text, Utf8 (decodeUtf8), encodeUtf8, pack, readFile, tshow)
+import Data.Aeson (FromJSON, KeyValue ((.=)), ToJSON (toEncoding), pairs)
 import qualified Data.Aeson as Aeson
+import Data.Text.Read (Reader, decimal)
+import Data.Time.Clock.POSIX (getPOSIXTime)
+import GHC.Generics (Generic)
 import Jose.Jwa
 import Jose.Jwk
 import Jose.Jwt
-import Data.Text.Read (decimal, Reader)
-import Lib.Error (ErrorResponse(ErrorResponse, eMessage))
-import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs, FromJSON)
-import Prelude hiding (exp, readFile)
-import Data.Time.Clock.POSIX (getPOSIXTime)
+import Lib.Error (ErrorResponse (ErrorResponse, eMessage))
 import Network.HTTP.Types (status401)
+import Web.Scotty (ActionM, header, json, liftAndCatchIO, status)
+import Prelude hiding (exp, readFile)
 
 type UserId = Integer
+
 type Token = Text
 
 data AuthError
@@ -30,11 +32,13 @@ data AuthError
   | TokenExpiredError
   deriving (Eq, Show)
 
-newtype TokenResponse = TokenResponse { uToken :: Text } deriving Generic
+newtype TokenResponse = TokenResponse {uToken :: Text} deriving (Generic)
 
-data TokenValue = TokenValue { sub :: String
-                             , exp :: Integer 
-                             } deriving (Show, Generic)
+data TokenValue = TokenValue
+  { sub :: String,
+    exp :: Integer
+  }
+  deriving (Show, Generic)
 
 instance FromJSON TokenValue
 
@@ -62,30 +66,32 @@ userIdToTokenOrErr userId = do
   liftAndCatchIO $ do
     jwks <- getJwks
     currentTime <- liftIO getPOSIXTime
-    let claim = JwtClaims { jwtIss = Nothing
-                          , jwtSub = Just $ tshow userId
-                          , jwtAud = Nothing
-                          , jwtExp = Just $ IntDate $ currentTime + 15000
-                          , jwtNbf = Nothing
-                          , jwtIat = Nothing
-                          , jwtJti = Nothing
-                          }
+    let claim =
+          JwtClaims
+            { jwtIss = Nothing,
+              jwtSub = Just $ tshow userId,
+              jwtAud = Nothing,
+              jwtExp = Just $ IntDate $ currentTime + 15000,
+              jwtNbf = Nothing,
+              jwtIat = Nothing,
+              jwtJti = Nothing
+            }
     encoded <- Jose.Jwt.encode jwks (JwsEncoding RS256) (Claims . toStrict . Aeson.encode $ claim)
     case encoded of
-      Left  _   -> return $ Left TokenEncodeError
+      Left _ -> return $ Left TokenEncodeError
       Right jwt -> return $ Right (getValueFromJwt jwt)
 
 encodeUserIdToToken :: UserId -> ActionM ()
 encodeUserIdToToken userId = do
   userIdToTokenOrErr userId >>= \case
-    Left _              -> json $ ErrorResponse { eMessage = "Cannot encode user token." }
-    Right encodedUserId -> json $ TokenResponse { uToken = encodedUserId }
+    Left _ -> json $ ErrorResponse {eMessage = "Cannot encode user token."}
+    Right encodedUserId -> json $ TokenResponse {uToken = encodedUserId}
 
 verifyJWTClaims :: ByteString -> IO (Either AuthError UserId)
 verifyJWTClaims bs = do
   let claims = Aeson.eitherDecode (fromStrict bs) :: Either String TokenValue
   case claims of
-    Left _           -> return $ Left ClaimDecodeError
+    Left _ -> return $ Left ClaimDecodeError
     Right tokenValue -> verifyClaimExpire tokenValue
 
 verifyClaimExpire :: TokenValue -> IO (Either AuthError UserId)
@@ -101,8 +107,9 @@ getValueFromJwt = decodeUtf8 . unJwt
 
 readInt :: Text -> Integer
 readInt = value . decimal
-  where value (Right (v, k)) = v
-        value (Left _) = -1
+  where
+    value (Right (v, k)) = v
+    value (Left _) = -1
 
 withUserIdOrErr :: ActionM (Either AuthError UserId)
 withUserIdOrErr = do
@@ -115,8 +122,8 @@ invalidTokenJSONResponse :: AuthError -> ActionM ()
 invalidTokenJSONResponse err = status status401 >> json message
   where
     message = case err of
-      TokenMissingError -> ErrorResponse { eMessage = "Invalid user token." }
-      TokenEncodeError -> ErrorResponse { eMessage = "Cannot encode token." }
-      TokenDecodeError -> ErrorResponse { eMessage = "Cannot decode token." }
-      ClaimDecodeError -> ErrorResponse { eMessage = "Cannot decode claim." }
-      TokenExpiredError -> ErrorResponse { eMessage = "Token expired." }
+      TokenMissingError -> ErrorResponse {eMessage = "Invalid user token."}
+      TokenEncodeError -> ErrorResponse {eMessage = "Cannot encode token."}
+      TokenDecodeError -> ErrorResponse {eMessage = "Cannot decode token."}
+      ClaimDecodeError -> ErrorResponse {eMessage = "Cannot decode claim."}
+      TokenExpiredError -> ErrorResponse {eMessage = "Token expired."}

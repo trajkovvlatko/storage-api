@@ -1,18 +1,18 @@
 module Views.Layout
-  ( layoutView
+  ( layoutView,
   )
 where
 
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html5
-  ( body
-  , docTypeHtml
-  , head
-  , meta
-  , (!)
+  ( body,
+    docTypeHtml,
+    head,
+    meta,
+    (!),
   )
-import Text.Blaze.Html5.Attributes ( charset )
-import Prelude hiding ( div, head, id )
+import Text.Blaze.Html5.Attributes (charset)
+import Prelude hiding (div, head, id)
 
 layoutView :: Html -> Html
 layoutView view = docTypeHtml $ do

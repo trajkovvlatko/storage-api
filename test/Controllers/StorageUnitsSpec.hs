@@ -1,19 +1,15 @@
-module Controllers.StorageUnitsSpec
-  ( spec )
+module Controllers.StorageUnitsSpec (spec) where
 
-where
-
-import Server ( app )
+import ClassyPrelude (IsString (fromString), MonadIO (liftIO))
 import Controllers.StorageUnits
-
+import Factories (createRoom, createStorageUnit, createUser)
+import Helpers (getToken, loginUser, shouldContainString)
+import Network.HTTP.Types
+import qualified Network.Wai.Test as WT
+import Server (app)
 import Test.Hspec
 import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
-import Factories (createUser, createRoom, createStorageUnit)
-import Helpers (loginUser, getToken, shouldContainString)
-import ClassyPrelude (IsString(fromString), MonadIO (liftIO))
-import Network.HTTP.Types
-import qualified Network.Wai.Test as WT
 
 contentType = ("Content-Type", "application/x-www-form-urlencoded")
 
@@ -104,7 +100,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
         let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
 
         let response = request methodPost url headers ""
@@ -116,7 +112,7 @@ spec = with app $ do
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
         let postBody = fromString "name=2323"
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
         let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
 
         let response = request methodPost url headers postBody
@@ -134,7 +130,7 @@ spec = with app $ do
         (otherRoomId, _) <- liftIO $ createRoom otherUserId "room2"
 
         let postBody = fromString "name=2323"
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
         let url = fromString $ "/rooms/" ++ show otherRoomId ++ "/storage_units"
 
         let response = request methodPost url headers postBody
@@ -162,7 +158,7 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         let url = fromString $ "/storage_units/" ++ show storageUnitId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers ""
         body <- fmap WT.simpleBody response
@@ -179,7 +175,7 @@ spec = with app $ do
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         let patchBody = "name=updated-name"
         let url = fromString $ "/storage_units/" ++ show storageUnitId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers patchBody
         body <- fmap WT.simpleBody response
@@ -197,7 +193,7 @@ spec = with app $ do
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit1"
         let patchBody = "name=updated-name"
         let url = fromString $ "/storage_units/" ++ show storageUnitId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers patchBody
 
@@ -225,7 +221,7 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         let url = fromString $ "/storage_units/" ++ show storageUnitId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodDelete url headers ""
 
@@ -241,7 +237,7 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom otherUserId "room1"
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit otherUserId roomId "storageUnit1"
         let url = fromString $ "/storage_units/" ++ show storageUnitId
-        let headers = [contentType, ("token", getToken loginResponse )]
+        let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodDelete url headers ""
 

@@ -1,7 +1,8 @@
 module Controllers.Helpers.Params
-  ( optionalParam
-  , optionalIntegerParam
-  ) where
+  ( optionalParam,
+    optionalIntegerParam,
+  )
+where
 
 import ClassyPrelude (LText)
 import Web.Scotty (ActionM, param, rescue)

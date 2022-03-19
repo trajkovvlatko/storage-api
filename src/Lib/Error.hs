@@ -1,12 +1,13 @@
-module Lib.Error 
-  ( ErrorResponse (ErrorResponse)
-  , eMessage
-  ) where
+module Lib.Error
+  ( ErrorResponse (ErrorResponse),
+    eMessage,
+  )
+where
 
-import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs)
+import Data.Aeson (KeyValue ((.=)), ToJSON (toEncoding), pairs)
 import GHC.Generics (Generic)
 
-newtype ErrorResponse = ErrorResponse { eMessage :: String } deriving Generic
+newtype ErrorResponse = ErrorResponse {eMessage :: String} deriving (Generic)
 
 instance ToJSON ErrorResponse where
   toEncoding (ErrorResponse message) =

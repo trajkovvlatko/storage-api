@@ -1,10 +1,9 @@
 module Controllers.Main where
 
 import Views.Main
-  (
-    indexView
+  ( indexView,
   )
-import Web.Scotty ( ActionM )
+import Web.Scotty (ActionM)
 
 index :: ActionM ()
 index = indexView

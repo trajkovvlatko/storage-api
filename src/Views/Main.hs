@@ -1,22 +1,22 @@
 module Views.Main
-  (
-    indexView
+  ( indexView,
   )
 where
 
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5
-  ( div
-  , h1
-  , p
-  , (!)
-  , ul
-  , li, h3
+  ( div,
+    h1,
+    h3,
+    li,
+    p,
+    ul,
+    (!),
   )
-import Text.Blaze.Html5.Attributes ( class_ )
-import Prelude hiding ( div, head, id )
-import Web.Scotty ( ActionM, html )
+import Text.Blaze.Html5.Attributes (class_)
 import Views.Layout (layoutView)
+import Web.Scotty (ActionM, html)
+import Prelude hiding (div, head, id)
 
 indexView :: ActionM ()
 indexView = (html . renderHtml) $ do

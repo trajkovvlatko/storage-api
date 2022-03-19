@@ -1,17 +1,16 @@
 module Server
-  ( runApp
-  , app
-  , loadEnv
+  ( runApp,
+    app,
+    loadEnv,
   )
 where
 
-import qualified Web.Scotty as S
-import Router ( routes )
 import Configuration.Dotenv (defaultConfig, loadFile)
-
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
+import Router (routes)
 import Web.Scotty (scottyApp)
+import qualified Web.Scotty as S
 
 loadEnv :: IO [(String, String)]
 loadEnv = loadFile defaultConfig

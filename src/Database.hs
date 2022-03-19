@@ -1,25 +1,28 @@
 module Database where
 
-import GHC.Generics (Generic)
+import Data.Pool (createPool, withResource)
 import Database.PostgreSQL.Simple
-    ( defaultConnectInfo
-    , connect
-    , ConnectInfo
-      ( connectUser
-      , connectPassword
-      , connectDatabase
-      , connectHost
-      )
-    , Connection
-    , close)
-import Data.Pool ( createPool, withResource )
+  ( ConnectInfo
+      ( connectDatabase,
+        connectHost,
+        connectPassword,
+        connectUser
+      ),
+    Connection,
+    close,
+    connect,
+    defaultConnectInfo,
+  )
+import GHC.Generics (Generic)
 import qualified System.Environment as ENV
 
-data DbConfig = DbConfig { dbName     :: String
-                         , dbUser     :: String
-                         , dbPassword :: String
-                         , dbHost     :: String
-                         } deriving (Show, Generic)
+data DbConfig = DbConfig
+  { dbName :: String,
+    dbUser :: String,
+    dbPassword :: String,
+    dbHost :: String
+  }
+  deriving (Show, Generic)
 
 getDatabaseConfig :: IO DbConfig
 getDatabaseConfig = do
@@ -32,11 +35,14 @@ getDatabaseConfig = do
   return $ DbConfig name user password host
 
 getConnection :: DbConfig -> IO Connection
-getConnection conf = connect defaultConnectInfo { connectUser     = dbUser conf
-                                                , connectPassword = dbPassword conf
-                                                , connectDatabase = dbName conf
-                                                , connectHost     = dbHost conf
-                                                }
+getConnection conf =
+  connect
+    defaultConnectInfo
+      { connectUser = dbUser conf,
+        connectPassword = dbPassword conf,
+        connectDatabase = dbName conf,
+        connectHost = dbHost conf
+      }
 
 withConn :: (Connection -> IO a) -> IO a
 withConn action = do

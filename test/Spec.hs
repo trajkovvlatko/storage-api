@@ -1,24 +1,25 @@
 module Main where
 
-import Test.Hspec
-import Database (withConn)
-import Database.PostgreSQL.Simple (execute_)
-
+import ClassyPrelude (fromString)
 import qualified Controllers.AuthSpec
+import qualified Controllers.DrawersSpec
 import qualified Controllers.RoomsSpec
 import qualified Controllers.StorageUnitsSpec
-import qualified Controllers.DrawersSpec
-
-import Server (loadEnv)
+import Database (withConn)
+import Database.PostgreSQL.Simple (execute_)
 import qualified Database.PostgreSQL.Simple.Types
-import ClassyPrelude (fromString)
+import Server (loadEnv)
+import Test.Hspec
 
 truncateQuery :: Database.PostgreSQL.Simple.Types.Query
 truncateQuery = fromString $ concatMap (\t -> "TRUNCATE TABLE " ++ t ++ "; ") tables
-  where tables = [ "users"
-                 , "rooms"
-                 , "storage_units"
-                 , "drawers" ]
+  where
+    tables =
+      [ "users",
+        "rooms",
+        "storage_units",
+        "drawers"
+      ]
 
 initSpecs :: IO ()
 initSpecs = do

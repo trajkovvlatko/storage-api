@@ -1,18 +1,15 @@
-module Controllers.AuthSpec
-  ( spec )
+module Controllers.AuthSpec (spec) where
 
-where
-
-import Server ( app )
-import Test.Hspec.Wai
-import Test.Hspec.Wai.JSON
+import ClassyPrelude (IsString (fromString), MonadIO (liftIO))
+import Data.ByteString (pack, unpack)
 import Factories (createUser)
 import Helpers (shouldContainString)
-import Data.ByteString (unpack, pack)
-import ClassyPrelude (IsString(fromString), MonadIO (liftIO))
 import Network.HTTP.Types
-import Test.Hspec
 import qualified Network.Wai.Test as WT
+import Server (app)
+import Test.Hspec
+import Test.Hspec.Wai
+import Test.Hspec.Wai.JSON
 
 contentType = ("Content-Type", "application/x-www-form-urlencoded")
 

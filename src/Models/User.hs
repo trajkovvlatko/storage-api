@@ -1,33 +1,37 @@
 module Models.User
-  ( createUser
-  , findUserByEmail
-  , User
-  , uId
-  , uEmail
-  , uPassword
-  ) where
+  ( createUser,
+    findUserByEmail,
+    User,
+    uId,
+    uEmail,
+    uPassword,
+  )
+where
 
-import Database (withConn)
-import Database.PostgreSQL.Simple (query, FromRow, SqlError)
-import GHC.Generics (Generic)
-import Database.PostgreSQL.Simple.FromRow (FromRow(fromRow), field)
-import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs)
+import ClassyPrelude (IsString (fromString), Text, unpack)
 import Control.Exception (try)
-import ClassyPrelude (Text, unpack, IsString (fromString))
-import Data.Password.Bcrypt (hashPassword, mkPassword, PasswordHash (unPasswordHash), Bcrypt)
+import Data.Aeson (KeyValue ((.=)), ToJSON (toEncoding), pairs)
+import Data.Password.Bcrypt (Bcrypt, PasswordHash (unPasswordHash), hashPassword, mkPassword)
+import Database (withConn)
+import Database.PostgreSQL.Simple (FromRow, SqlError, query)
+import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
+import GHC.Generics (Generic)
 
 data User = User
-  { uId       :: Integer
-  , uEmail    :: String
-  , uPassword :: String } deriving Generic
+  { uId :: Integer,
+    uEmail :: String,
+    uPassword :: String
+  }
+  deriving (Generic)
 
 instance FromRow User where
   fromRow = User <$> field <*> field <*> field
 
 instance ToJSON User where
   toEncoding (User id' email _) =
-    pairs $    "id"    .= id'
-            <> "email" .= email
+    pairs $
+      "id" .= id'
+        <> "email" .= email
 
 getPasswordHash :: String -> IO (PasswordHash Bcrypt)
 getPasswordHash password = hashPassword (mkPassword (fromString password))
@@ -40,7 +44,7 @@ createUser paramEmail paramPassword = do
   where
     queryString = "INSERT INTO users (email, password) VALUES (?, ?) RETURNING id, email, password"
 
-findUserByEmail :: String  -> IO (Maybe User)
+findUserByEmail :: String -> IO (Maybe User)
 findUserByEmail paramEmail = do
   resultsToMaybeUser =<< withConn (\conn -> try $ query conn queryString [paramEmail])
   where
@@ -55,7 +59,7 @@ resultsToMaybeUser maybeUser = do
       print err
       return Nothing
     Right [(resId, resEmail, resPassword)] -> do
-      return $ Just $ User { uId = resId, uEmail = resEmail, uPassword = resPassword }
+      return $ Just $ User {uId = resId, uEmail = resEmail, uPassword = resPassword}
     Right invalid -> do
       print invalid
       return Nothing
