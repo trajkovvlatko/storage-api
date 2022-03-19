@@ -6,7 +6,7 @@ module Lib.Auth
   ) where
 
 import GHC.Generics (Generic)
-import Web.Scotty (liftAndCatchIO, ActionM, json, header)
+import Web.Scotty (liftAndCatchIO, ActionM, json, header, status)
 import ClassyPrelude (Utf8 (decodeUtf8), encodeUtf8, readFile, ByteString, Text, pack, LazySequence (toStrict, fromStrict), tshow, MonadIO (liftIO))
 import qualified Data.Aeson as Aeson
 import Jose.Jwa
@@ -17,6 +17,7 @@ import Lib.Error (ErrorResponse(ErrorResponse, eMessage))
 import Data.Aeson (ToJSON(toEncoding), KeyValue((.=)), pairs, FromJSON)
 import Prelude hiding (exp, readFile)
 import Data.Time.Clock.POSIX (getPOSIXTime)
+import Network.HTTP.Types (status401)
 
 type UserId = Integer
 type Token = Text
@@ -111,9 +112,11 @@ withUserIdOrErr = do
     Just txt -> liftAndCatchIO $ tokenToUserIdOrErr (toStrict txt)
 
 invalidTokenJSONResponse :: AuthError -> ActionM ()
-invalidTokenJSONResponse err = json $ case err of
-  TokenMissingError -> ErrorResponse { eMessage = "Invalid user token." }
-  TokenEncodeError -> ErrorResponse { eMessage = "Cannot encode token." }
-  TokenDecodeError -> ErrorResponse { eMessage = "Cannot decode token." }
-  ClaimDecodeError -> ErrorResponse { eMessage = "Cannot decode claim." }
-  TokenExpiredError -> ErrorResponse { eMessage = "Token expired." }
+invalidTokenJSONResponse err = status status401 >> json message
+  where
+    message = case err of
+      TokenMissingError -> ErrorResponse { eMessage = "Invalid user token." }
+      TokenEncodeError -> ErrorResponse { eMessage = "Cannot encode token." }
+      TokenDecodeError -> ErrorResponse { eMessage = "Cannot decode token." }
+      ClaimDecodeError -> ErrorResponse { eMessage = "Cannot decode claim." }
+      TokenExpiredError -> ErrorResponse { eMessage = "Token expired." }
