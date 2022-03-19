@@ -8,7 +8,7 @@ module Controllers.Rooms
 where
 
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
-import Models.Room (Room, createRoom, deleteRoom, getAllRooms, getRoom, updateRoom)
+import Models.Room (Room, RoomId, RoomName, createRoom, deleteRoom, getAllRooms, getRoom, updateRoom)
 import Web.Scotty (ActionM, json, liftAndCatchIO, param)
 
 index :: ActionM ()
@@ -19,29 +19,29 @@ index = do
 
 preview :: ActionM ()
 preview = do
-  paramId :: Integer <- param "id"
+  paramId :: RoomId <- param "id"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (getRoom userId paramId) >>= resultToJsonResponse
 
 create :: ActionM ()
 create = do
-  paramName :: String <- param "name"
+  paramName :: RoomName <- param "name"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (createRoom userId paramName) >>= resultToJsonResponse
 
 update :: ActionM ()
 update = do
-  paramId :: Integer <- param "id"
-  paramName :: String <- param "name"
+  paramId :: RoomId <- param "id"
+  paramName :: RoomName <- param "name"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (updateRoom userId paramId paramName) >>= resultToJsonResponse
 
 delete :: ActionM ()
 delete = do
-  paramId :: Integer <- param "id"
+  paramId :: RoomId <- param "id"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (deleteRoom userId paramId) >>= resultToJsonResponse

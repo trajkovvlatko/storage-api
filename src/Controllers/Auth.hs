@@ -8,14 +8,14 @@ import ClassyPrelude (MonadIO (liftIO), pack, unpack)
 import Data.Password.Bcrypt (Bcrypt, PasswordCheck (PasswordCheckSuccess), PasswordHash (PasswordHash), checkPassword, hashPassword, mkPassword)
 import Lib.Auth (encodeUserIdToToken)
 import Lib.Error (ErrorResponse (ErrorResponse), eMessage)
-import Models.User (User (uId, uPassword), createUser, findUserByEmail)
+import Models.User (Email, Password, User (uId, uPassword), createUser, findUserByEmail)
 import Network.HTTP.Types (status401, status422)
 import Web.Scotty (ActionM, json, liftAndCatchIO, param, status)
 
 register :: ActionM ()
 register = do
-  paramEmail :: String <- param "email"
-  paramPassword :: String <- param "password"
+  paramEmail :: Email <- param "email"
+  paramPassword :: Password <- param "password"
   maybeUser <- liftAndCatchIO (createUser paramEmail paramPassword)
   case maybeUser of
     Nothing -> status status422 >> json ErrorResponse {eMessage = "Cannot create a user."}
@@ -25,19 +25,19 @@ register = do
 
 login :: ActionM ()
 login = do
-  paramEmail :: String <- param "email"
-  paramPassword :: String <- param "password"
+  paramEmail :: Email <- param "email"
+  paramPassword :: Password <- param "password"
   maybeUser <- liftAndCatchIO (findUserByEmail paramEmail)
   loginMaybeUser paramPassword maybeUser
 
 -- helper functions
 
-verify :: String -> String -> IO PasswordCheck
+verify :: Password -> Password -> IO PasswordCheck
 verify paramPassword userPassword = do
   let pass = mkPassword $ pack paramPassword
   return $ checkPassword pass (PasswordHash $ pack userPassword)
 
-loginMaybeUser :: String -> Maybe User -> ActionM ()
+loginMaybeUser :: Password -> Maybe User -> ActionM ()
 loginMaybeUser _ Nothing = json $ ErrorResponse {eMessage = "Cannot find user."}
 loginMaybeUser paramPassword (Just user) = do
   valid <- liftIO $ verify paramPassword (uPassword user)

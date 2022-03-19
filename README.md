@@ -15,22 +15,22 @@ Authentication generates tokens and requires a .jwk.sig file to be present in th
 
 #### Setup development database
 ```
-./scripts/setup-dev.sh
+./bin/setup-dev.sh
 ```
 
 #### Run development server
 ```
-./scripts/dev.sh
+./bin/dev.sh
 ```
 
 #### Setup test database
 ```
-./scripts/setup-test.sh
+./bin/setup-test.sh
 ```
 
 #### Run tests
 ```
-./scripts/test.sh
+./bin/test.sh
 ```
 
 ### Endpoints

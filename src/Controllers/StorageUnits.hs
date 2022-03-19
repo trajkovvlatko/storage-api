@@ -9,8 +9,11 @@ where
 
 import Controllers.Helpers.Params (optionalIntegerParam, optionalParam)
 import Lib.Auth (invalidTokenJSONResponse, withUserIdOrErr)
+import Models.Room (RoomId)
 import Models.StorageUnit
   ( StorageUnit,
+    StorageUnitId,
+    StorageUnitName,
     createStorageUnit,
     deleteStorageUnit,
     getAllStorageUnits,
@@ -21,38 +24,38 @@ import Web.Scotty (ActionM, json, liftAndCatchIO, param)
 
 index :: ActionM ()
 index = do
-  paramRoomId :: Integer <- param "room_id"
+  paramRoomId :: RoomId <- param "room_id"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (getAllStorageUnits userId paramRoomId) >>= json
 
 preview :: ActionM ()
 preview = do
-  paramId :: Integer <- param "id"
+  paramId :: StorageUnitId <- param "id"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (getStorageUnit userId paramId) >>= resultToJsonResponse
 
 create :: ActionM ()
 create = do
-  paramName :: String <- param "name"
-  paramRoomId :: Integer <- param "room_id"
+  paramName :: StorageUnitName <- param "name"
+  paramRoomId :: RoomId <- param "room_id"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (createStorageUnit userId paramRoomId paramName) >>= resultToJsonResponse
 
 update :: ActionM ()
 update = do
-  paramId :: Integer <- param "id"
-  paramRoomId :: Maybe Integer <- optionalIntegerParam "room_id"
-  paramName :: Maybe String <- optionalParam "name"
+  paramId :: StorageUnitId <- param "id"
+  paramRoomId :: Maybe RoomId <- optionalIntegerParam "room_id"
+  paramName :: Maybe StorageUnitName <- optionalParam "name"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (updateStorageUnit userId paramId paramRoomId paramName) >>= resultToJsonResponse
 
 delete :: ActionM ()
 delete = do
-  paramId :: Integer <- param "id"
+  paramId :: StorageUnitId <- param "id"
   withUserIdOrErr >>= \case
     Left err -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (deleteStorageUnit userId paramId) >>= resultToJsonResponse

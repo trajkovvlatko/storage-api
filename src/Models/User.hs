@@ -5,6 +5,8 @@ module Models.User
     uId,
     uEmail,
     uPassword,
+    Email,
+    Password,
   )
 where
 
@@ -16,11 +18,16 @@ import Database (withConn)
 import Database.PostgreSQL.Simple (FromRow, SqlError, query)
 import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
 import GHC.Generics (Generic)
+import Lib.Auth (UserId)
+
+type Email = String
+
+type Password = String
 
 data User = User
-  { uId :: Integer,
-    uEmail :: String,
-    uPassword :: String
+  { uId :: UserId,
+    uEmail :: Email,
+    uPassword :: Password
   }
   deriving (Generic)
 
@@ -33,10 +40,10 @@ instance ToJSON User where
       "id" .= id'
         <> "email" .= email
 
-getPasswordHash :: String -> IO (PasswordHash Bcrypt)
+getPasswordHash :: Password -> IO (PasswordHash Bcrypt)
 getPasswordHash password = hashPassword (mkPassword (fromString password))
 
-createUser :: String -> String -> IO (Maybe User)
+createUser :: Email -> Password -> IO (Maybe User)
 createUser paramEmail paramPassword = do
   passwordHash <- getPasswordHash paramPassword
   let passwordString = unpack $ unPasswordHash passwordHash
@@ -44,7 +51,7 @@ createUser paramEmail paramPassword = do
   where
     queryString = "INSERT INTO users (email, password) VALUES (?, ?) RETURNING id, email, password"
 
-findUserByEmail :: String -> IO (Maybe User)
+findUserByEmail :: Email -> IO (Maybe User)
 findUserByEmail paramEmail = do
   resultsToMaybeUser =<< withConn (\conn -> try $ query conn queryString [paramEmail])
   where
@@ -52,7 +59,7 @@ findUserByEmail paramEmail = do
 
 -- helper functions
 
-resultsToMaybeUser :: Either SqlError [(Integer, String, String)] -> IO (Maybe User)
+resultsToMaybeUser :: Either SqlError [(UserId, Email, Password)] -> IO (Maybe User)
 resultsToMaybeUser maybeUser = do
   case maybeUser of
     Left err -> do

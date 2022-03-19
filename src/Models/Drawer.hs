@@ -4,6 +4,9 @@ module Models.Drawer
     createDrawer,
     updateDrawer,
     deleteDrawer,
+    DrawerId,
+    DrawerNote,
+    DrawerLevel,
     Drawer
       ( Drawer,
         dId,
@@ -22,13 +25,20 @@ import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
 import Database.PostgreSQL.Simple.ToField (ToField (toField))
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
+import Models.StorageUnit (StorageUnitId)
+
+type DrawerId = Integer
+
+type DrawerLevel = Integer
+
+type DrawerNote = String
 
 data Drawer = Drawer
-  { dId :: Integer,
+  { dId :: DrawerId,
     dUserId :: UserId,
-    dStorageUnitId :: Integer,
-    dLevel :: Integer,
-    dNote :: String
+    dStorageUnitId :: StorageUnitId,
+    dLevel :: DrawerLevel,
+    dNote :: DrawerNote
   }
   deriving (Generic)
 
@@ -46,25 +56,25 @@ instance ToJSON Drawer where
 
 -- queries
 
-getAllDrawers :: UserId -> Integer -> IO [Drawer]
+getAllDrawers :: UserId -> StorageUnitId -> IO [Drawer]
 getAllDrawers userId paramStorageUnitId = do
   withConn $ \conn -> query conn queryString (userId, paramStorageUnitId)
   where
     queryString = "SELECT id, user_id, storage_unit_id, level, note FROM drawers WHERE user_id = ? AND storage_unit_id = ?;"
 
-getDrawer :: UserId -> Integer -> IO (Maybe Drawer)
+getDrawer :: UserId -> DrawerId -> IO (Maybe Drawer)
 getDrawer userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeDrawer
   where
     queryString = "SELECT id, user_id, storage_unit_id, level, note FROM drawers WHERE id = ? AND user_id = ? LIMIT 1"
 
-createDrawer :: UserId -> Integer -> Integer -> String -> IO (Maybe Drawer)
+createDrawer :: UserId -> StorageUnitId -> DrawerLevel -> DrawerNote -> IO (Maybe Drawer)
 createDrawer userId paramStorageUnitId paramLevel paramNote = do
   withConn $ \conn -> query conn queryString (userId, paramStorageUnitId, userId, paramLevel, paramNote) >>= resultsToMaybeDrawer
   where
     queryString = "INSERT INTO drawers (user_id, storage_unit_id, level, note) VALUES (?, (SELECT id FROM storage_units where id = ? AND user_id = ?), ?, ?) RETURNING id, user_id, storage_unit_id, level, note"
 
-updateDrawer :: UserId -> Integer -> Maybe Integer -> Maybe Integer -> Maybe String -> IO (Maybe Drawer)
+updateDrawer :: UserId -> DrawerId -> Maybe StorageUnitId -> Maybe DrawerLevel -> Maybe DrawerNote -> IO (Maybe Drawer)
 updateDrawer userId paramId paramStorageUnitId paramLevel paramNote = do
   withConn $ \conn -> do
     let updateList =
@@ -90,7 +100,7 @@ updateDrawer userId paramId paramStorageUnitId paramLevel paramNote = do
         then query conn selectQueryString (paramId, userId)
         else query conn updateQueryString paramList
 
-deleteDrawer :: UserId -> Integer -> IO (Maybe Drawer)
+deleteDrawer :: UserId -> DrawerId -> IO (Maybe Drawer)
 deleteDrawer userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeDrawer
   where
@@ -98,7 +108,7 @@ deleteDrawer userId paramId = do
 
 -- helper functions
 
-resultsToMaybeDrawer :: [(Integer, UserId, Integer, Integer, String)] -> IO (Maybe Drawer)
+resultsToMaybeDrawer :: [(DrawerId, UserId, StorageUnitId, DrawerLevel, DrawerNote)] -> IO (Maybe Drawer)
 resultsToMaybeDrawer = \case
   [(resId, resUserId, resStorageUnitId, resLevel, resNote)] ->
     return $

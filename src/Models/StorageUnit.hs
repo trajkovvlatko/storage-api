@@ -4,6 +4,8 @@ module Models.StorageUnit
     createStorageUnit,
     updateStorageUnit,
     deleteStorageUnit,
+    StorageUnitId,
+    StorageUnitName,
     StorageUnit
       ( StorageUnit,
         sId,
@@ -21,12 +23,17 @@ import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
 import Database.PostgreSQL.Simple.ToField (ToField (toField))
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
+import Models.Room (RoomId)
+
+type StorageUnitId = Integer
+
+type StorageUnitName = String
 
 data StorageUnit = StorageUnit
-  { sId :: Integer,
+  { sId :: StorageUnitId,
     sUserId :: UserId,
-    sRoomId :: Integer,
-    sName :: String
+    sRoomId :: RoomId,
+    sName :: StorageUnitName
   }
   deriving (Generic)
 
@@ -43,25 +50,25 @@ instance ToJSON StorageUnit where
 
 -- queries
 
-getAllStorageUnits :: UserId -> Integer -> IO [StorageUnit]
+getAllStorageUnits :: UserId -> RoomId -> IO [StorageUnit]
 getAllStorageUnits userId paramRoomId = do
   withConn $ \conn -> query conn queryString (userId, paramRoomId)
   where
     queryString = "SELECT id, user_id, room_id, name FROM storage_units WHERE user_id = ? AND room_id = ?;"
 
-getStorageUnit :: UserId -> Integer -> IO (Maybe StorageUnit)
+getStorageUnit :: UserId -> StorageUnitId -> IO (Maybe StorageUnit)
 getStorageUnit userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeStorage
   where
     queryString = "SELECT id, user_id, room_id, name FROM storage_units WHERE id = ? AND user_id = ? LIMIT 1"
 
-createStorageUnit :: UserId -> Integer -> String -> IO (Maybe StorageUnit)
+createStorageUnit :: UserId -> RoomId -> StorageUnitName -> IO (Maybe StorageUnit)
 createStorageUnit userId paramRoomId paramName = do
   withConn $ \conn -> query conn queryString (userId, paramRoomId, userId, paramName) >>= resultsToMaybeStorage
   where
     queryString = "INSERT INTO storage_units (user_id, room_id, name) VALUES (?, (SELECT id FROM rooms where id = ? AND user_id = ?), ?) RETURNING id, user_id, room_id, name"
 
-updateStorageUnit :: UserId -> Integer -> Maybe Integer -> Maybe String -> IO (Maybe StorageUnit)
+updateStorageUnit :: UserId -> StorageUnitId -> Maybe RoomId -> Maybe StorageUnitName -> IO (Maybe StorageUnit)
 updateStorageUnit userId paramId paramRoomId paramName = do
   withConn $ \conn -> do
     let updateList =
@@ -85,7 +92,7 @@ updateStorageUnit userId paramId paramRoomId paramName = do
         then query conn selectQueryString (paramId, userId)
         else query conn updateQueryString paramList
 
-deleteStorageUnit :: UserId -> Integer -> IO (Maybe StorageUnit)
+deleteStorageUnit :: UserId -> StorageUnitId -> IO (Maybe StorageUnit)
 deleteStorageUnit userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeStorage
   where
@@ -93,7 +100,7 @@ deleteStorageUnit userId paramId = do
 
 -- helper functions
 
-resultsToMaybeStorage :: [(Integer, UserId, Integer, String)] -> IO (Maybe StorageUnit)
+resultsToMaybeStorage :: [(StorageUnitId, UserId, RoomId, StorageUnitName)] -> IO (Maybe StorageUnit)
 resultsToMaybeStorage = \case
   [(resId, resUserId, resRoomId, resName)] ->
     return $
