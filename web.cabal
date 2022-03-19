@@ -53,7 +53,8 @@ library
       LambdaCase
       QuasiQuotes
   build-depends:
-      MissingH
+      HUnit
+    , MissingH
     , aeson
     , base >=4.7 && <5
     , blaze-html
@@ -63,6 +64,7 @@ library
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , http-types
     , jose-jwt
     , password
     , postgresql-simple
@@ -89,7 +91,8 @@ executable web-exe
       QuasiQuotes
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      MissingH
+      HUnit
+    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
@@ -98,6 +101,7 @@ executable web-exe
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , http-types
     , password
     , postgresql-simple
     , wai
@@ -124,7 +128,8 @@ test-suite web-test
       QuasiQuotes
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      MissingH
+      HUnit
+    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
@@ -133,6 +138,7 @@ test-suite web-test
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , http-types
     , password
     , postgresql-simple
     , wai

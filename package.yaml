@@ -41,6 +41,8 @@ dependencies:
   - aeson
   - bytestring
   - password
+  - http-types
+  - HUnit
 
 library:
   source-dirs: src
