@@ -8,6 +8,11 @@ cp sample.env .env
 ```
 Edit the contents of .env with proper db credentials. The file is in .gitignore.
 
+#### Generate JSON web key
+Authentication uses Bcrypt and requires a .jwk.sig file to be present in the project root.
+
+(Tip: Use https://mkjwk.org to easily generate a JSON web key)
+
 #### Setup development database
 ```
 ./scripts/setup-dev.sh
