@@ -53,7 +53,7 @@ spec = with app $ do
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|[{id: #{drawerId}, storage_unit_id: #{storageUnitId}, level: #{level}, note: #{drawerNote}}]|] {matchStatus = 200}
+        response `shouldRespondWith` [json|[{id: #{drawerId}, user_id: #{userId}, storage_unit_id: #{storageUnitId}, level: #{level}, note: #{drawerNote}}]|] {matchStatus = 200}
 
   describe "preview" $ do
     context "without authenticated user" $ do
@@ -89,7 +89,7 @@ spec = with app $ do
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|{id: #{drawerId}, storage_unit_id: #{storageUnitId}, level: #{level}, note: #{drawerNote}}|] {matchStatus = 200}
+        response `shouldRespondWith` [json|{id: #{drawerId}, user_id: #{userId}, storage_unit_id: #{storageUnitId}, level: #{level}, note: #{drawerNote}}|] {matchStatus = 200}
 
   describe "create" $ do
     context "without authenticated user" $ do
@@ -130,6 +130,7 @@ spec = with app $ do
         let response = request methodPost url headers postBody
 
         body <- fmap WT.simpleBody response
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         liftIO $ body `shouldContainString` "note\":\"note1\""
         liftIO $ body `shouldContainString` "level\":123"
         response `shouldRespondWith` 200
@@ -177,7 +178,9 @@ spec = with app $ do
         body <- fmap WT.simpleBody response
 
         response `shouldRespondWith` 200
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         liftIO $ body `shouldContainString` "note\":\"drawer1\""
+        liftIO $ body `shouldContainString` "level\":1"
         liftIO $ body `shouldContainString` fromString ("storage_unit_id\":" ++ show storageUnitId)
 
       it "updates a drawer" $ do
@@ -195,6 +198,7 @@ spec = with app $ do
 
         liftIO $ body `shouldContainString` "note\":\"updated-note\""
         liftIO $ body `shouldContainString` "level\":123"
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
       it "does not update a drawer for other user's storage unit" $ do
@@ -243,6 +247,7 @@ spec = with app $ do
         body <- fmap WT.simpleBody response
         liftIO $ body `shouldContainString` "note\":\"drawer1\""
         liftIO $ body `shouldContainString` "level\":1"
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
       it "does not delete a drawer for other user's storage unit" $ do

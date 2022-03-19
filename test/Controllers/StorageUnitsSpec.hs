@@ -50,7 +50,7 @@ spec = with app $ do
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|[{id: #{storageUnitId}, room_id: #{roomId}, name: #{storageUnitName}}]|] {matchStatus = 200}
+        response `shouldRespondWith` [json|[{id: #{storageUnitId}, user_id: #{userId}, room_id: #{roomId}, name: #{storageUnitName}}]|] {matchStatus = 200}
 
   describe "preview" $ do
     context "without authenticated user" $ do
@@ -84,7 +84,7 @@ spec = with app $ do
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|{id: #{storageUnitId}, room_id: #{roomId}, name: #{storageUnitName}}|] {matchStatus = 200}
+        response `shouldRespondWith` [json|{id: #{storageUnitId}, user_id: #{userId}, room_id: #{roomId}, name: #{storageUnitName}}|] {matchStatus = 200}
 
   describe "create" $ do
     context "without authenticated user" $ do
@@ -123,6 +123,7 @@ spec = with app $ do
 
         body <- fmap WT.simpleBody response
         liftIO $ body `shouldContainString` "name\":\"2323\""
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
       it "does not create a storage unit for another user's room" $ do
@@ -168,6 +169,7 @@ spec = with app $ do
 
         response `shouldRespondWith` 200
         liftIO $ body `shouldContainString` "name\":\"storageUnit1\""
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         liftIO $ body `shouldContainString` fromString ("room_id\":" ++ show roomId)
 
       it "updates a storageUnit" $ do
@@ -183,6 +185,7 @@ spec = with app $ do
         body <- fmap WT.simpleBody response
 
         liftIO $ body `shouldContainString` "name\":\"updated-name\""
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
       it "does not update storage units for other users rooms" $ do
@@ -228,6 +231,7 @@ spec = with app $ do
 
         body <- fmap WT.simpleBody response
         liftIO $ body `shouldContainString` "name\":\"storageUnit1\""
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
       it "does not delete storage units by other users" $ do
