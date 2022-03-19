@@ -48,8 +48,8 @@ getStorageUnit userId paramId = do
 
 createStorageUnit :: UserId -> Integer -> String -> IO (Maybe StorageUnit)
 createStorageUnit userId paramRoomId paramName = do
-  withConn $ \conn -> query conn queryString (userId, paramRoomId, paramName) >>= resultsToMaybeStorage
-  where queryString = "INSERT INTO storage_units (user_id, room_id, name) VALUES (?, ?, ?) RETURNING id, room_id, name"
+  withConn $ \conn -> query conn queryString (userId, paramRoomId, userId, paramName) >>= resultsToMaybeStorage
+  where queryString = "INSERT INTO storage_units (user_id, room_id, name) VALUES (?, (SELECT id FROM rooms where id = ? AND user_id = ?), ?) RETURNING id, room_id, name"
 
 updateStorageUnit :: UserId -> Integer -> Maybe Integer -> Maybe String -> IO (Maybe StorageUnit)
 updateStorageUnit userId paramId paramRoomId paramName = do

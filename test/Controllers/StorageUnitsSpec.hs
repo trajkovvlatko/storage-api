@@ -111,7 +111,7 @@ spec = with app $ do
 
         response `shouldRespondWith` 500
 
-      it "creates a storageUnit" $ do
+      it "creates a storage unit" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
@@ -124,6 +124,21 @@ spec = with app $ do
         body <- fmap WT.simpleBody response
         liftIO $ body `shouldContainString` "name\":\"2323\""
         response `shouldRespondWith` 200
+
+      it "does not create a storage unit for another user's room" $ do
+        userId <- liftIO $ createUser "user@user.com" "password"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        loginResponse <- loginUser
+        (roomId, _) <- liftIO $ createRoom userId "room1"
+        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room2"
+
+        let postBody = fromString "name=2323"
+        let headers = [contentType, ("token", getToken loginResponse )]
+        let url = fromString $ "/rooms/" ++ show otherRoomId ++ "/storage_units"
+
+        let response = request methodPost url headers postBody
+
+        response `shouldRespondWith` 500
 
   describe "update" $ do
     context "without authenticated user" $ do
@@ -170,6 +185,23 @@ spec = with app $ do
         liftIO $ body `shouldContainString` "name\":\"updated-name\""
         response `shouldRespondWith` 200
 
+      it "does not update storage units for other users rooms" $ do
+        userId <- liftIO $ createUser "user@user.com" "password"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        loginResponse <- loginUser
+        (roomId, _) <- liftIO $ createRoom userId "room1"
+        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room2"
+        (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit1"
+        let patchBody = "name=updated-name"
+        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        let headers = [contentType, ("token", getToken loginResponse )]
+
+        let response = request methodPatch url headers patchBody
+
+        body <- fmap WT.simpleBody response
+        -- TODO: Improve with a better response
+        liftIO $ body `shouldBe` "[]"
+
   describe "delete" $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
@@ -184,7 +216,7 @@ spec = with app $ do
         response `shouldRespondWith` [json|{message: "Invalid user token."}|] {matchStatus = 401}
 
     context "with authenticated user" $ do
-      it "deletes a storageUnit" $ do
+      it "deletes a storage unit" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
@@ -197,3 +229,18 @@ spec = with app $ do
         body <- fmap WT.simpleBody response
         liftIO $ body `shouldContainString` "name\":\"storageUnit1\""
         response `shouldRespondWith` 200
+
+      it "does not delete storage units by other users" $ do
+        userId <- liftIO $ createUser "user@user.com" "password"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        loginResponse <- loginUser
+        (roomId, _) <- liftIO $ createRoom otherUserId "room1"
+        (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit otherUserId roomId "storageUnit1"
+        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        let headers = [contentType, ("token", getToken loginResponse )]
+
+        let response = request methodDelete url headers ""
+
+        body <- fmap WT.simpleBody response
+        -- TODO: Improve with a better response
+        liftIO $ body `shouldBe` "[]"

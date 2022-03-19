@@ -134,6 +134,20 @@ spec = with app $ do
         liftIO $ body `shouldContainString` "level\":123"
         response `shouldRespondWith` 200
 
+      it "does not create a drawer for other users storage unit" $ do
+        userId <- liftIO $ createUser "user@user.com" "password"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        loginResponse <- loginUser
+        (roomId, _) <- liftIO $ createRoom otherUserId "room1"
+        (storageUnitId, _) <- liftIO $ createStorageUnit otherUserId roomId "storageUnit1"
+        let postBody = fromString "note=note1&level=123"
+        let headers = [contentType, ("token", getToken loginResponse )]
+        let url = fromString $ "/storage_units/" ++ show storageUnitId ++ "/drawers"
+
+        let response = request methodPost url headers postBody
+
+        response `shouldRespondWith` 500
+
   describe "update" $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
@@ -183,6 +197,23 @@ spec = with app $ do
         liftIO $ body `shouldContainString` "level\":123"
         response `shouldRespondWith` 200
 
+      it "does not update a drawer for other user's storage unit" $ do
+        userId <- liftIO $ createUser "user@user.com" "password"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        loginResponse <- loginUser
+        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room1"
+        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit1"
+        (drawerId, _, _) <- liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer1"
+        let patchBody = "note=updated-note&level=123"
+        let url = fromString $ "/drawers/" ++ show drawerId
+        let headers = [contentType, ("token", getToken loginResponse )]
+
+        let response = request methodPatch url headers patchBody
+
+        body <- fmap WT.simpleBody response
+        -- TODO: Improve with a better response
+        liftIO $ body `shouldBe` "[]"
+
   describe "delete" $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
@@ -213,3 +244,19 @@ spec = with app $ do
         liftIO $ body `shouldContainString` "note\":\"drawer1\""
         liftIO $ body `shouldContainString` "level\":1"
         response `shouldRespondWith` 200
+
+      it "does not delete a drawer for other user's storage unit" $ do
+        userId <- liftIO $ createUser "user@user.com" "password"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        loginResponse <- loginUser
+        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room1"
+        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit1"
+        (otherDrawerId, _, _) <- liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer1"
+        let url = fromString $ "/drawers/" ++ show otherDrawerId
+        let headers = [contentType, ("token", getToken loginResponse )]
+
+        let response = request methodDelete url headers ""
+
+        body <- fmap WT.simpleBody response
+        -- TODO: Improve with a better response
+        liftIO $ body `shouldBe` "[]"

@@ -51,8 +51,8 @@ getDrawer userId paramId = do
 
 createDrawer :: UserId -> Integer -> Integer -> String -> IO (Maybe Drawer)
 createDrawer userId paramStorageUnitId paramLevel paramNote = do
-  withConn $ \conn -> query conn queryString (userId, paramStorageUnitId, paramLevel, paramNote) >>= resultsToMaybeDrawer
-  where queryString = "INSERT INTO drawers (user_id, storage_unit_id, level, note) VALUES (?, ?, ?, ?) RETURNING id, storage_unit_id, level, note"
+  withConn $ \conn -> query conn queryString (userId, paramStorageUnitId, userId, paramLevel, paramNote) >>= resultsToMaybeDrawer
+  where queryString = "INSERT INTO drawers (user_id, storage_unit_id, level, note) VALUES (?, (SELECT id FROM storage_units where id = ? AND user_id = ?), ?, ?) RETURNING id, storage_unit_id, level, note"
 
 updateDrawer :: UserId -> Integer -> Maybe Integer -> Maybe Integer -> Maybe String -> IO (Maybe Drawer)
 updateDrawer userId paramId paramStorageUnitId paramLevel paramNote = do

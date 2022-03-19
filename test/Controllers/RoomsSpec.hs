@@ -43,7 +43,7 @@ spec = with app $ do
 
         let response = request "GET" "/rooms" [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|[{id: #{roomId}, name: #{roomName}}]|] {matchStatus = 200}
+        response `shouldRespondWith` [json|[{id: #{roomId}, user_id: #{userId}, name: #{roomName}}]|] {matchStatus = 200}
 
   describe "preview" $ do
     context "without authenticated user" $ do
@@ -75,7 +75,7 @@ spec = with app $ do
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|{id: #{roomId}, name: #{roomName}}|] {matchStatus = 200}
+        response `shouldRespondWith` [json|{id: #{roomId}, user_id: #{userId}, name: #{roomName}}|] {matchStatus = 200}
 
   describe "create" $ do
     it "responds with 500 for missing parameter" $ do
@@ -93,7 +93,7 @@ spec = with app $ do
 
     context "with authenticated user" $ do
       it "creates a room" $ do
-        liftIO $ createUser "user@user.com" "password"
+        userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         let postBody = "name=2323"
         let headers = [contentType, ("token", getToken loginResponse )]
@@ -102,6 +102,7 @@ spec = with app $ do
 
         body <- fmap WT.simpleBody response
         liftIO $ body `shouldContainString` "name\":\"2323\""
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
   describe "update" $ do
@@ -137,6 +138,7 @@ spec = with app $ do
         body <- fmap WT.simpleBody response
 
         liftIO $ body `shouldContainString` "name\":\"updated-name\""
+        liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
   describe "delete" $ do
