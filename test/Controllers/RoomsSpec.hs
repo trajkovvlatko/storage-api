@@ -6,19 +6,14 @@ where
 import Server ( app )
 import Controllers.Rooms
 
-import Test.Hspec as T hiding (shouldContain)
-import Test.Hspec.Wai as W
+import Test.Hspec
+import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
 import Factories (createUser, createRoom)
 import Helpers (loginUser, getToken, shouldContainString)
-import Data.ByteString (unpack, pack)
 import ClassyPrelude (IsString(fromString), MonadIO (liftIO))
 import Network.HTTP.Types
-import Test.Hspec.Wai (shouldRespondWith)
-import Test.Hspec
 import qualified Network.Wai.Test as WT
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.ByteString.Lazy.Char8 as LC8
 
 contentType = ("Content-Type", "application/x-www-form-urlencoded")
 
