@@ -31,4 +31,4 @@ shouldContainString subject matcher = assertBool message (subject `contains` mat
   where
     s `contains` m = any (LBS.isPrefixOf m) $ LBS.tails s
     message =
-      "Expected \"" ++ LC8.unpack subject ++ "\" to contain \"" ++ LC8.unpack matcher ++ "\", but not"
+      "Expected \"" ++ LC8.unpack subject ++ "\" to contain \"" ++ LC8.unpack matcher ++ "\", but it didn't"

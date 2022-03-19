@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           web
+name:           storage-api
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/trajkovvlatko/web#readme>
-homepage:       https://github.com/trajkovvlatko/web#readme
-bug-reports:    https://github.com/trajkovvlatko/web/issues
+description:    Please see the README on GitHub at <https://github.com/trajkovvlatko/storage-api#readme>
+homepage:       https://github.com/trajkovvlatko/storage-api#readme
+bug-reports:    https://github.com/trajkovvlatko/storage-api/issues
 author:         Vlatko Trajkov
 maintainer:     trajkovvlatko@gmail.com
 copyright:      2021 Vlatko Trajkov
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/trajkovvlatko/web
+  location: https://github.com/trajkovvlatko/storage-api
 
 library
   exposed-modules:
@@ -43,7 +43,7 @@ library
       Views.Layout
       Views.Main
   other-modules:
-      Paths_web
+      Paths_storage_api
   hs-source-dirs:
       src
   default-extensions:
@@ -54,7 +54,6 @@ library
       QuasiQuotes
   build-depends:
       HUnit
-    , MissingH
     , aeson
     , base >=4.7 && <5
     , blaze-html
@@ -77,10 +76,10 @@ library
     , warp
   default-language: Haskell2010
 
-executable web-exe
+executable storage-api-exe
   main-is: Main.hs
   other-modules:
-      Paths_web
+      Paths_storage_api
   hs-source-dirs:
       app
   default-extensions:
@@ -92,7 +91,6 @@ executable web-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HUnit
-    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
@@ -104,13 +102,13 @@ executable web-exe
     , http-types
     , password
     , postgresql-simple
+    , storage-api
     , wai
     , wai-extra
     , warp
-    , web
   default-language: Haskell2010
 
-test-suite web-test
+test-suite storage-api-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
@@ -120,7 +118,7 @@ test-suite web-test
       Controllers.StorageUnitsSpec
       Factories
       Helpers
-      Paths_web
+      Paths_storage_api
   hs-source-dirs:
       test
   default-extensions:
@@ -132,7 +130,6 @@ test-suite web-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HUnit
-    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
@@ -144,8 +141,8 @@ test-suite web-test
     , http-types
     , password
     , postgresql-simple
+    , storage-api
     , wai
     , wai-extra
     , warp
-    , web
   default-language: Haskell2010

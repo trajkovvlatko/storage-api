@@ -1,6 +1,6 @@
-name:                web
+name:                storage-api
 version:             0.1.0.0
-github:              "trajkovvlatko/web"
+github:              "trajkovvlatko/storage-api"
 license:             BSD3
 author:              "Vlatko Trajkov"
 maintainer:          "trajkovvlatko@gmail.com"
@@ -24,7 +24,7 @@ default-extensions:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/trajkovvlatko/web#readme>
+description:         Please see the README on GitHub at <https://github.com/trajkovvlatko/storage-api#readme>
 
 dependencies:
   - base >= 4.7 && < 5
@@ -37,7 +37,6 @@ dependencies:
   - hspec-wai
   - hspec-wai-json
   - postgresql-simple
-  - MissingH
   - aeson
   - bytestring
   - password
@@ -55,7 +54,7 @@ library:
     - time
 
 executables:
-  web-exe:
+  storage-api-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -63,10 +62,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - web
+    - storage-api
 
 tests:
-  web-test:
+  storage-api-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -74,4 +73,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - web
+    - storage-api
