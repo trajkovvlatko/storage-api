@@ -114,7 +114,9 @@ test-suite web-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Controllers.DrawersSpec
       Controllers.RoomsSpec
+      Controllers.StorageUnitsSpec
       Factories
       Helpers
       Paths_web

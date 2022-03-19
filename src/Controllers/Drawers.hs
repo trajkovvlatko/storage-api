@@ -29,7 +29,7 @@ create :: ActionM ()
 create = do
   paramStorageUnitId :: Integer <- param "storage_unit_id"
   paramLevel :: Integer <- param "level"
-  paramNote :: String <- param "name"
+  paramNote :: String <- param "note"
   withUserIdOrErr >>= \case
     Left err     -> invalidTokenJSONResponse err
     Right userId -> liftAndCatchIO (createDrawer userId paramStorageUnitId paramLevel paramNote) >>= resultToJsonResponse

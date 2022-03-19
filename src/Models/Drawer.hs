@@ -78,7 +78,7 @@ updateDrawer userId paramId paramStorageUnitId paramLevel paramNote = do
 deleteDrawer :: UserId -> Integer -> IO (Maybe Drawer)
 deleteDrawer userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeDrawer
-  where queryString = "DELETE FROM drawers WHERE id = ? AND user_id = ? RETURNING id, storage_unit_id, level note"
+  where queryString = "DELETE FROM drawers WHERE id = ? AND user_id = ? RETURNING id, storage_unit_id, level, note"
 
 -- helper functions
 

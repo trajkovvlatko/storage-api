@@ -5,6 +5,9 @@ import Database (withConn)
 import Database.PostgreSQL.Simple (execute_)
 
 import qualified Controllers.RoomsSpec
+import qualified Controllers.StorageUnitsSpec
+import qualified Controllers.DrawersSpec
+
 import Server (loadEnv)
 import qualified Database.PostgreSQL.Simple.Types
 import ClassyPrelude (fromString)
@@ -28,3 +31,5 @@ main = hspec $ before_ initSpecs spec
 spec :: Spec
 spec = do
   describe "Rooms" Controllers.RoomsSpec.spec
+  describe "StorageUnits" Controllers.StorageUnitsSpec.spec
+  describe "Drawers" Controllers.DrawersSpec.spec
