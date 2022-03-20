@@ -28,6 +28,8 @@ library
       Controllers.Auth
       Controllers.Drawers
       Controllers.Helpers.Params
+      Controllers.Items
+      Controllers.ItemTypes
       Controllers.Main
       Controllers.Rooms
       Controllers.StorageUnits
@@ -35,6 +37,8 @@ library
       Lib.Auth
       Lib.Error
       Models.Drawer
+      Models.Item
+      Models.ItemType
       Models.Room
       Models.StorageUnit
       Models.User

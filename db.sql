@@ -344,6 +344,13 @@ CREATE INDEX drawers_user_id_idx ON public.drawers USING btree (user_id);
 
 
 --
+-- Name: item_types_label_idx; Type: INDEX; Schema: public; Owner: vlatko
+--
+
+CREATE UNIQUE INDEX item_types_label_idx ON public.item_types USING btree (label);
+
+
+--
 -- Name: rooms_user_id_idx; Type: INDEX; Schema: public; Owner: vlatko
 --
 

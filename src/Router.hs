@@ -5,6 +5,7 @@ where
 
 import qualified Controllers.Auth as Auth
 import qualified Controllers.Drawers as Drawers
+import qualified Controllers.ItemTypes as ItemTypes
 import qualified Controllers.Main as Main
 import qualified Controllers.Rooms as Rooms
 import qualified Controllers.StorageUnits as StorageUnits
@@ -33,9 +34,16 @@ routes = do
   patch "/storage_units/:id" StorageUnits.update
   delete "/storage_units/:id" StorageUnits.delete
 
-  -- Drawer routes
+  -- Drawers routes
   get "/storage_units/:storage_unit_id/drawers" Drawers.index
   get "/drawers/:id" Drawers.preview
   post "/storage_units/:storage_unit_id/drawers" Drawers.create
   patch "/drawers/:id" Drawers.update
   delete "/drawers/:id" Drawers.delete
+
+  -- ItemTypes routes
+  get "/item_types" ItemTypes.index
+  get "/item_types/:id" ItemTypes.preview
+  post "/item_types" ItemTypes.create
+  patch "/item_types/:id" ItemTypes.update
+  delete "/item_types/:id" ItemTypes.delete
