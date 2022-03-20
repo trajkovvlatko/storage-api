@@ -58,6 +58,74 @@ ALTER SEQUENCE public.drawers_id_seq OWNED BY public.drawers.id;
 
 
 --
+-- Name: item_types; Type: TABLE; Schema: public; Owner: vlatko
+--
+
+CREATE TABLE public.item_types (
+    id integer NOT NULL,
+    label character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.item_types OWNER TO vlatko;
+
+--
+-- Name: item_types_id_seq; Type: SEQUENCE; Schema: public; Owner: vlatko
+--
+
+CREATE SEQUENCE public.item_types_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.item_types_id_seq OWNER TO vlatko;
+
+--
+-- Name: item_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: vlatko
+--
+
+ALTER SEQUENCE public.item_types_id_seq OWNED BY public.item_types.id;
+
+
+--
+-- Name: items; Type: TABLE; Schema: public; Owner: vlatko
+--
+
+CREATE TABLE public.items (
+    id integer NOT NULL,
+    item_type_id integer NOT NULL
+);
+
+
+ALTER TABLE public.items OWNER TO vlatko;
+
+--
+-- Name: items_id_seq; Type: SEQUENCE; Schema: public; Owner: vlatko
+--
+
+CREATE SEQUENCE public.items_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.items_id_seq OWNER TO vlatko;
+
+--
+-- Name: items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: vlatko
+--
+
+ALTER SEQUENCE public.items_id_seq OWNED BY public.items.id;
+
+
+--
 -- Name: rooms; Type: TABLE; Schema: public; Owner: vlatko
 --
 
@@ -171,6 +239,20 @@ ALTER TABLE ONLY public.drawers ALTER COLUMN id SET DEFAULT nextval('public.draw
 
 
 --
+-- Name: item_types id; Type: DEFAULT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.item_types ALTER COLUMN id SET DEFAULT nextval('public.item_types_id_seq'::regclass);
+
+
+--
+-- Name: items id; Type: DEFAULT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.items ALTER COLUMN id SET DEFAULT nextval('public.items_id_seq'::regclass);
+
+
+--
 -- Name: rooms id; Type: DEFAULT; Schema: public; Owner: vlatko
 --
 
@@ -197,6 +279,22 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 ALTER TABLE ONLY public.drawers
     ADD CONSTRAINT drawers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: item_types item_types_pkey; Type: CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.item_types
+    ADD CONSTRAINT item_types_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: items items_pkey; Type: CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.items
+    ADD CONSTRAINT items_pkey PRIMARY KEY (id);
 
 
 --
@@ -264,6 +362,54 @@ CREATE INDEX storages_room_id_idx ON public.storage_units USING btree (room_id);
 --
 
 CREATE INDEX storages_user_id_idx ON public.storage_units USING btree (user_id);
+
+
+--
+-- Name: items item_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.items
+    ADD CONSTRAINT item_type_id_fkey FOREIGN KEY (item_type_id) REFERENCES public.item_types(id) ON DELETE CASCADE;
+
+
+--
+-- Name: storage_units room_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.storage_units
+    ADD CONSTRAINT room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id) ON DELETE CASCADE;
+
+
+--
+-- Name: drawers storage_unit_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.drawers
+    ADD CONSTRAINT storage_unit_id_fkey FOREIGN KEY (storage_unit_id) REFERENCES public.storage_units(id) ON DELETE CASCADE;
+
+
+--
+-- Name: drawers user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.drawers
+    ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: rooms user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.rooms
+    ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: storage_units user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.storage_units
+    ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --

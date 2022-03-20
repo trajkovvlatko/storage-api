@@ -41,7 +41,8 @@ spec = with app $ do
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        liftIO $ createStorageUnit 0 roomId "storageUnit0"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        liftIO $ createStorageUnit otherUserId roomId "storageUnit0"
         let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
@@ -74,7 +75,8 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        liftIO $ createStorageUnit 0 roomId "storageUnit0"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        liftIO $ createStorageUnit otherUserId roomId "storageUnit0"
         loginResponse <- loginUser
         let url = fromString $ "/storage_units/" ++ show storageUnitId
 

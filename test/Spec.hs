@@ -12,7 +12,7 @@ import Server (loadEnv)
 import Test.Hspec
 
 truncateQuery :: Database.PostgreSQL.Simple.Types.Query
-truncateQuery = fromString $ concatMap (\t -> "TRUNCATE TABLE " ++ t ++ "; ") tables
+truncateQuery = fromString $ concatMap (\t -> "SET client_min_messages = WARNING; TRUNCATE TABLE " ++ t ++ " CASCADE;") tables
   where
     tables =
       [ "users",

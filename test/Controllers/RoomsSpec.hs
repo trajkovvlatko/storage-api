@@ -34,7 +34,8 @@ spec = with app $ do
       it "returns a list of rooms for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         (roomId, roomName) <- liftIO $ createRoom userId "room1"
-        liftIO $ createRoom 0 "room0"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        liftIO $ createRoom otherUserId "room0"
         loginResponse <- loginUser
 
         let response = request "GET" "/rooms" [("token", getToken loginResponse)] ""
@@ -65,7 +66,8 @@ spec = with app $ do
       it "returns a room for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         (roomId, roomName) <- liftIO $ createRoom userId "room1"
-        liftIO $ createRoom 0 "room0"
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        liftIO $ createRoom otherUserId "room0"
         loginResponse <- loginUser
         let url = fromString $ "/rooms/" ++ show roomId
 

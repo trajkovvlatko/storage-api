@@ -44,7 +44,12 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         (drawerId, level, drawerNote) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
-        liftIO $ createDrawer 0 0 1 "drawer0"
+
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room1"
+        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit2"
+        liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer0"
+
         let url = fromString $ "/storage_units/" ++ show storageUnitId ++ "/drawers"
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
@@ -79,7 +84,12 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         (drawerId, level, drawerNote) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
-        liftIO $ createDrawer 0 0 1 "drawer0"
+
+        otherUserId <- liftIO $ createUser "other@other.com" "password"
+        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room2"
+        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit2"
+        liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer0"
+
         loginResponse <- loginUser
         let url = fromString $ "/drawers/" ++ show drawerId
 
