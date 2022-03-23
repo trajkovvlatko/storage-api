@@ -3,6 +3,8 @@ module Factories
     createRoom,
     createStorageUnit,
     createDrawer,
+    createItemType,
+    createColor,
   )
 where
 
@@ -40,3 +42,17 @@ createDrawer userId storageUnitId level note = do
   return $ head results
   where
     queryString = "INSERT INTO drawers (user_id, storage_unit_id, level, note) VALUES ('" ++ show userId ++ "', '" ++ show storageUnitId ++ "', '" ++ show level ++ "', '" ++ note ++ "') RETURNING id, level, note"
+
+createItemType :: String -> IO (Integer, String)
+createItemType label = do
+  results :: [(Integer, String)] <- withConn (\conn -> query_ conn (fromString queryString))
+  return $ head results
+  where
+    queryString = "INSERT INTO item_types (label) VALUES ('" ++ label ++ "') RETURNING id, label"
+
+createColor :: String -> IO (Integer, String)
+createColor label = do
+  results :: [(Integer, String)] <- withConn (\conn -> query_ conn (fromString queryString))
+  return $ head results
+  where
+    queryString = "INSERT INTO colors (label) VALUES ('" ++ label ++ "') RETURNING id, label"

@@ -4,11 +4,13 @@ module Router
 where
 
 import qualified Controllers.Auth as Auth
+import qualified Controllers.Colors as Colors
 import qualified Controllers.Drawers as Drawers
 import qualified Controllers.ItemTypes as ItemTypes
 import qualified Controllers.Main as Main
 import qualified Controllers.Rooms as Rooms
 import qualified Controllers.StorageUnits as StorageUnits
+import Text.Blaze.Html4.FrameSet (col)
 import Web.Scotty as S (ScottyM, delete, get, patch, post)
 
 routes :: ScottyM ()
@@ -47,3 +49,10 @@ routes = do
   post "/item_types" ItemTypes.create
   patch "/item_types/:id" ItemTypes.update
   delete "/item_types/:id" ItemTypes.delete
+
+  -- Colors routes
+  get "/colors" Colors.index
+  get "/colors/:id" Colors.preview
+  post "/colors" Colors.create
+  patch "/colors/:id" Colors.update
+  delete "/colors/:id" Colors.delete

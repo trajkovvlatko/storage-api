@@ -21,6 +21,40 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: colors; Type: TABLE; Schema: public; Owner: vlatko
+--
+
+CREATE TABLE public.colors (
+    id integer NOT NULL,
+    label character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.colors OWNER TO vlatko;
+
+--
+-- Name: colors_id_seq; Type: SEQUENCE; Schema: public; Owner: vlatko
+--
+
+CREATE SEQUENCE public.colors_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.colors_id_seq OWNER TO vlatko;
+
+--
+-- Name: colors_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: vlatko
+--
+
+ALTER SEQUENCE public.colors_id_seq OWNED BY public.colors.id;
+
+
+--
 -- Name: drawers; Type: TABLE; Schema: public; Owner: vlatko
 --
 
@@ -232,6 +266,13 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: colors id; Type: DEFAULT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.colors ALTER COLUMN id SET DEFAULT nextval('public.colors_id_seq'::regclass);
+
+
+--
 -- Name: drawers id; Type: DEFAULT; Schema: public; Owner: vlatko
 --
 
@@ -271,6 +312,14 @@ ALTER TABLE ONLY public.storage_units ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: colors colors_pkey; Type: CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.colors
+    ADD CONSTRAINT colors_pkey PRIMARY KEY (id);
 
 
 --
@@ -327,6 +376,13 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: colors_label_idx; Type: INDEX; Schema: public; Owner: vlatko
+--
+
+CREATE UNIQUE INDEX colors_label_idx ON public.colors USING btree (label);
 
 
 --

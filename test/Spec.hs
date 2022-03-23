@@ -2,7 +2,9 @@ module Main where
 
 import ClassyPrelude (fromString)
 import qualified Controllers.AuthSpec
+import qualified Controllers.ColorsSpec
 import qualified Controllers.DrawersSpec
+import qualified Controllers.ItemTypesSpec
 import qualified Controllers.RoomsSpec
 import qualified Controllers.StorageUnitsSpec
 import Database (withConn)
@@ -15,7 +17,9 @@ truncateQuery :: Database.PostgreSQL.Simple.Types.Query
 truncateQuery = fromString $ concatMap (\t -> "SET client_min_messages = WARNING; TRUNCATE TABLE " ++ t ++ " CASCADE;") tables
   where
     tables =
-      [ "users",
+      [ "item_types",
+        "colors",
+        "users",
         "rooms",
         "storage_units",
         "drawers"
@@ -36,3 +40,5 @@ spec = do
   describe "Rooms" Controllers.RoomsSpec.spec
   describe "StorageUnits" Controllers.StorageUnitsSpec.spec
   describe "Drawers" Controllers.DrawersSpec.spec
+  describe "ItemTypes" Controllers.ItemTypesSpec.spec
+  describe "Colors" Controllers.ColorsSpec.spec

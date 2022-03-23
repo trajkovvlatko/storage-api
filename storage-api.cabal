@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Controllers.Auth
+      Controllers.Colors
       Controllers.Drawers
       Controllers.Helpers.Params
       Controllers.Items
@@ -36,6 +37,7 @@ library
       Database
       Lib.Auth
       Lib.Error
+      Models.Color
       Models.Drawer
       Models.Item
       Models.ItemType
@@ -117,7 +119,9 @@ test-suite storage-api-test
   main-is: Spec.hs
   other-modules:
       Controllers.AuthSpec
+      Controllers.ColorsSpec
       Controllers.DrawersSpec
+      Controllers.ItemTypesSpec
       Controllers.RoomsSpec
       Controllers.StorageUnitsSpec
       Factories
