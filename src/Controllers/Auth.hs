@@ -9,11 +9,12 @@ import Data.Password.Bcrypt (Bcrypt, PasswordCheck (PasswordCheckSuccess), Passw
 import Lib.Auth (encodeUserIdToToken)
 import Lib.Error (ErrorResponse (ErrorResponse), eMessage)
 import Models.User (Email, Password, User (uId, uPassword), createUser, findUserByEmail)
-import Network.HTTP.Types (status401, status422)
+import Network.HTTP.Types (status401, status403, status422)
+import qualified System.Environment as ENV
 import Web.Scotty (ActionM, json, liftAndCatchIO, param, status)
 
 register :: ActionM ()
-register = do
+register = validateRegistrationsStatus $ do
   paramEmail :: Email <- param "email"
   paramPassword :: Password <- param "password"
   maybeUser <- liftAndCatchIO (createUser paramEmail paramPassword)
@@ -46,3 +47,13 @@ loginMaybeUser paramPassword (Just user) = do
 loginResponse :: User -> PasswordCheck -> ActionM ()
 loginResponse user PasswordCheckSuccess = encodeUserIdToToken (uId user)
 loginResponse _ _ = status status401 >> json ErrorResponse {eMessage = "Invalid password."}
+
+validateRegistrationsStatus :: ActionM () -> ActionM ()
+validateRegistrationsStatus action = do
+  disableRegistrations <- liftIO $ ENV.getEnv "DISABLE_REGISTRATIONS"
+  case disableRegistrations of
+    "FALSE" -> action
+    _ -> disabledRegistrationsResponse
+
+disabledRegistrationsResponse :: ActionM ()
+disabledRegistrationsResponse = status status403 >> json ErrorResponse {eMessage = "Registrations are disabled."}
