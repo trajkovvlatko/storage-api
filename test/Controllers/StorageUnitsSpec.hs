@@ -20,7 +20,7 @@ spec = with app $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         (roomId, _) <- liftIO $ createRoom userId "room1"
-        let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
+        let url = fromString $ "/storage_units?room_id=" ++ show roomId
         let response = request methodGet url [] ""
 
         response `shouldRespondWith` [json|{message: "Invalid user token."}|] {matchStatus = 401}
@@ -30,7 +30,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
-        let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
+        let url = fromString $ "/storage_units?room_id=" ++ show roomId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
@@ -43,7 +43,7 @@ spec = with app $ do
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         liftIO $ createStorageUnit otherUserId roomId "storageUnit0"
-        let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
+        let url = fromString $ "/storage_units?room_id=" ++ show roomId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
@@ -89,11 +89,10 @@ spec = with app $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         (roomId, _) <- liftIO $ createRoom userId "room1"
-        let postBody = fromString "name=2323"
+        let postBody = fromString $ "name=2323&room_id=" ++ show roomId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
-        let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
 
-        let response = request methodPost url headers postBody
+        let response = request methodPost "/storage_units" headers postBody
 
         response `shouldRespondWith` [json|{message: "Invalid user token."}|] {matchStatus = 401}
 
@@ -103,9 +102,8 @@ spec = with app $ do
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
         let headers = [contentType, ("token", getToken loginResponse)]
-        let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
 
-        let response = request methodPost url headers ""
+        let response = request methodPost "/storage_units" headers ""
 
         response `shouldRespondWith` 500
 
@@ -113,11 +111,10 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
-        let postBody = fromString "name=2323"
+        let postBody = fromString $ "name=2323&room_id=" ++ show roomId
         let headers = [contentType, ("token", getToken loginResponse)]
-        let url = fromString $ "/rooms/" ++ show roomId ++ "/storage_units"
 
-        let response = request methodPost url headers postBody
+        let response = request methodPost "/storage_units" headers postBody
 
         body <- fmap WT.simpleBody response
         liftIO $ body `shouldContainString` "name\":\"2323\""
@@ -131,11 +128,10 @@ spec = with app $ do
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (otherRoomId, _) <- liftIO $ createRoom otherUserId "room2"
 
-        let postBody = fromString "name=2323"
+        let postBody = fromString $ "name=2323&room_id=" ++ show otherRoomId
         let headers = [contentType, ("token", getToken loginResponse)]
-        let url = fromString $ "/rooms/" ++ show otherRoomId ++ "/storage_units"
 
-        let response = request methodPost url headers postBody
+        let response = request methodPost "/storage_units" headers postBody
 
         response `shouldRespondWith` 500
 
@@ -145,7 +141,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        let patchBody = "name=updated-name"
+        let patchBody = fromString $ "name=updated-name&room_id" ++ show roomId
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
@@ -175,7 +171,7 @@ spec = with app $ do
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
         (storageUnitId, storageUnitName) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        let patchBody = "name=updated-name"
+        let patchBody = fromString $ "name=updated-name&room_id=" ++ show roomId
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
 

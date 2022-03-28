@@ -131,7 +131,11 @@ ALTER SEQUENCE public.item_types_id_seq OWNED BY public.item_types.id;
 
 CREATE TABLE public.items (
     id integer NOT NULL,
-    item_type_id integer NOT NULL
+    user_id integer NOT NULL,
+    drawer_id integer NOT NULL,
+    color_id integer NOT NULL,
+    item_type_id integer NOT NULL,
+    name character varying(255) NOT NULL
 );
 
 
@@ -428,6 +432,22 @@ CREATE INDEX storages_user_id_idx ON public.storage_units USING btree (user_id);
 
 
 --
+-- Name: items color_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.items
+    ADD CONSTRAINT color_id_fkey FOREIGN KEY (color_id) REFERENCES public.colors(id) ON DELETE CASCADE;
+
+
+--
+-- Name: items drawer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.items
+    ADD CONSTRAINT drawer_id_fkey FOREIGN KEY (drawer_id) REFERENCES public.drawers(id) ON DELETE CASCADE;
+
+
+--
 -- Name: items item_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
 --
 
@@ -472,6 +492,14 @@ ALTER TABLE ONLY public.rooms
 --
 
 ALTER TABLE ONLY public.storage_units
+    ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: items user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: vlatko
+--
+
+ALTER TABLE ONLY public.items
     ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
