@@ -70,3 +70,6 @@ indexView = (html . renderHtml) $ do
         li "create: POST /items"
         li "update: PATCH /items/:id"
         li "delete: DELETE /items/:id"
+      h3 "Search"
+      ul $ do
+        li "basic search: GET /search/basic/:term"

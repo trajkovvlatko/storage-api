@@ -33,6 +33,7 @@ library
       Controllers.ItemTypes
       Controllers.Main
       Controllers.Rooms
+      Controllers.Search
       Controllers.StorageUnits
       Database
       Lib.Auth

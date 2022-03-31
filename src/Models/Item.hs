@@ -4,8 +4,10 @@ module Models.Item
     createItem,
     updateItem,
     deleteItem,
+    basicSearch,
     ItemId,
     ItemName,
+    Term,
     Item
       ( Item,
         dId
@@ -13,6 +15,7 @@ module Models.Item
   )
 where
 
+import ClassyPrelude (IsString (fromString))
 import Data.Aeson (KeyValue ((.=)), ToJSON (toEncoding), pairs)
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
@@ -30,6 +33,8 @@ import Models.ItemType (ItemTypeId)
 type ItemId = Integer
 
 type ItemName = String
+
+type Term = String
 
 data Item = Item
   { dId :: ItemId,
@@ -128,6 +133,12 @@ deleteItem userId paramId = do
             WHERE id = ?
               AND user_id = ?
             RETURNING id, user_id, drawer_id, color_id, item_type_id, name |]
+
+basicSearch :: UserId -> Term -> IO [Item]
+basicSearch userId paramTerm = do
+  withConn $ \conn -> query conn (fromString queryString) [userId]
+  where
+    queryString = "SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE user_id = ? AND name LIKE '%" ++ paramTerm ++ "%'"
 
 -- helper functions
 

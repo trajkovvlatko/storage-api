@@ -10,6 +10,7 @@ import qualified Controllers.ItemTypes as ItemTypes
 import qualified Controllers.Items as Items
 import qualified Controllers.Main as Main
 import qualified Controllers.Rooms as Rooms
+import qualified Controllers.Search as Search
 import qualified Controllers.StorageUnits as StorageUnits
 import Text.Blaze.Html4.FrameSet (col)
 import Web.Scotty as S (ScottyM, delete, get, patch, post)
@@ -64,3 +65,6 @@ routes = do
   post "/items" Items.create
   patch "/items/:id" Items.update
   delete "/items/:id" Items.delete
+
+  -- Search routes
+  get "/search/basic/:term" Search.basic
