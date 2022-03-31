@@ -17,6 +17,7 @@ import Data.Password.Bcrypt (Bcrypt, PasswordHash (unPasswordHash), hashPassword
 import Database (withConn)
 import Database.PostgreSQL.Simple (FromRow, SqlError, query)
 import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
+import Database.PostgreSQL.Simple.SqlQQ
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
 
@@ -49,13 +50,13 @@ createUser paramEmail paramPassword = do
   let passwordString = unpack $ unPasswordHash passwordHash
   resultsToMaybeUser =<< withConn (\conn -> try $ query conn queryString [paramEmail, passwordString])
   where
-    queryString = "INSERT INTO users (email, password) VALUES (?, ?) RETURNING id, email, password"
+    queryString = [sql| INSERT INTO users (email, password) VALUES (?, ?) RETURNING id, email, password |]
 
 findUserByEmail :: Email -> IO (Maybe User)
 findUserByEmail paramEmail = do
   resultsToMaybeUser =<< withConn (\conn -> try $ query conn queryString [paramEmail])
   where
-    queryString = "SELECT id, email, password FROM users WHERE email = ?"
+    queryString = [sql| SELECT id, email, password FROM users WHERE email = ? |]
 
 -- helper functions
 

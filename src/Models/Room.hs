@@ -18,6 +18,7 @@ import Data.Aeson (KeyValue ((.=)), ToJSON (toEncoding), pairs)
 import Database (withConn)
 import Database.PostgreSQL.Simple (Only (Only), query)
 import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
+import Database.PostgreSQL.Simple.SqlQQ
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
 
@@ -48,31 +49,31 @@ getAllRooms :: UserId -> IO [Room]
 getAllRooms userId = do
   withConn $ \conn -> query conn queryString (Only userId)
   where
-    queryString = "SELECT id, user_id, name FROM rooms WHERE user_id = ?;"
+    queryString = [sql| SELECT id, user_id, name FROM rooms WHERE user_id = ? |]
 
 getRoom :: UserId -> RoomId -> IO (Maybe Room)
 getRoom userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeRoom
   where
-    queryString = "SELECT id, user_id, name FROM rooms WHERE id = ? AND user_id = ? LIMIT 1"
+    queryString = [sql| SELECT id, user_id, name FROM rooms WHERE id = ? AND user_id = ? LIMIT 1 |]
 
 createRoom :: UserId -> RoomName -> IO (Maybe Room)
 createRoom userId paramName = do
   withConn $ \conn -> query conn queryString (paramName, userId) >>= resultsToMaybeRoom
   where
-    queryString = "INSERT INTO rooms (name, user_id) VALUES (?, ?) RETURNING id, user_id, name"
+    queryString = [sql| INSERT INTO rooms (name, user_id) VALUES (?, ?) RETURNING id, user_id, name |]
 
 updateRoom :: UserId -> RoomId -> RoomName -> IO (Maybe Room)
 updateRoom userId paramId paramName = do
   withConn $ \conn -> query conn queryString (paramName, paramId, userId) >>= resultsToMaybeRoom
   where
-    queryString = "UPDATE rooms SET name = ? WHERE id = ? AND user_id = ? RETURNING id, user_id, name"
+    queryString = [sql| UPDATE rooms SET name = ? WHERE id = ? AND user_id = ? RETURNING id, user_id, name |]
 
 deleteRoom :: UserId -> RoomId -> IO (Maybe Room)
 deleteRoom userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeRoom
   where
-    queryString = "DELETE FROM rooms WHERE id = ? AND user_id = ? RETURNING id, user_id, name"
+    queryString = [sql| DELETE FROM rooms WHERE id = ? AND user_id = ? RETURNING id, user_id, name |]
 
 -- helper functions
 

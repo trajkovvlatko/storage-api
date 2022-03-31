@@ -5,6 +5,7 @@ import qualified Controllers.AuthSpec
 import qualified Controllers.ColorsSpec
 import qualified Controllers.DrawersSpec
 import qualified Controllers.ItemTypesSpec
+import qualified Controllers.ItemsSpec
 import qualified Controllers.RoomsSpec
 import qualified Controllers.StorageUnitsSpec
 import Database (withConn)
@@ -42,3 +43,4 @@ spec = do
   describe "Drawers" Controllers.DrawersSpec.spec
   describe "ItemTypes" Controllers.ItemTypesSpec.spec
   describe "Colors" Controllers.ColorsSpec.spec
+  describe "Items" Controllers.ItemsSpec.spec

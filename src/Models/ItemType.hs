@@ -19,6 +19,7 @@ import Data.Maybe (catMaybes)
 import Database (withConn)
 import Database.PostgreSQL.Simple (query)
 import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
+import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.ToField (ToField (toField))
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
@@ -48,24 +49,24 @@ getAllItemTypes :: IO [ItemType]
 getAllItemTypes = do
   withConn $ \conn -> query conn queryString ()
   where
-    queryString = "SELECT id, label FROM item_types;"
+    queryString = [sql| SELECT id, label FROM item_types |]
 
 getItemType :: ItemTypeId -> IO (Maybe ItemType)
 getItemType paramId = do
   withConn $ \conn -> query conn queryString [paramId] >>= resultsToMaybeItemType
   where
-    queryString = "SELECT id, label FROM item_types WHERE id = ? LIMIT 1"
+    queryString = [sql| SELECT id, label FROM item_types WHERE id = ? LIMIT 1 |]
 
 createItemType :: ItemTypeLabel -> IO (Maybe ItemType)
 createItemType paramLabel = do
   withConn $ \conn -> query conn queryString [paramLabel] >>= resultsToMaybeItemType
   where
-    queryString = "INSERT INTO item_types (label) VALUES (?) RETURNING id, label"
+    queryString = [sql| INSERT INTO item_types (label) VALUES (?) RETURNING id, label |]
 
 updateItemType :: ItemTypeId -> Maybe ItemTypeLabel -> IO (Maybe ItemType)
 updateItemType paramId paramLabel = do
   withConn $ \conn -> do
-    let updateList = catMaybes [const "label = ?" <$> paramLabel]
+    let updateList = catMaybes [const [sql| label = ? |] <$> paramLabel]
         paramList =
           catMaybes
             [ toField <$> paramLabel,
@@ -73,7 +74,7 @@ updateItemType paramId paramLabel = do
             ]
         updatesString = if L.null updateList then mempty else mconcat $ L.intersperse ", " updateList
         updateQueryString = "UPDATE item_types SET " <> updatesString <> " WHERE id = ? RETURNING id, label"
-        selectQueryString = "SELECT id, label FROM item_types WHERE id = ? LIMIT 1"
+        selectQueryString = [sql| SELECT id, label FROM item_types WHERE id = ? LIMIT 1 |]
 
     resultsToMaybeItemType
       =<< if L.null updateList
@@ -84,7 +85,7 @@ deleteItemType :: ItemTypeId -> IO (Maybe ItemType)
 deleteItemType paramId = do
   withConn $ \conn -> query conn queryString [paramId] >>= resultsToMaybeItemType
   where
-    queryString = "DELETE FROM item_types WHERE id = ? RETURNING id, label"
+    queryString = [sql| DELETE FROM item_types WHERE id = ? RETURNING id, label |]
 
 -- helper functions
 

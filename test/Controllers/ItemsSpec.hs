@@ -1,9 +1,13 @@
-module Controllers.StorageUnitsSpec (spec) where
+module Controllers.ItemsSpec (spec) where
 
-import ClassyPrelude (IsString (fromString), MonadIO (liftIO))
-import Controllers.StorageUnits
-import Factories (createRoom, createStorageUnit, createUser)
+import ClassyPrelude (IsString (fromString), LazySequence (fromStrict), MonadIO (liftIO))
+import Controllers.Items
+import Factories (createColor, createDrawer, createItem, createItemType, createRoom, createStorageUnit, createUser)
 import Helpers (getToken, loginUser, shouldContainString)
+import Lib.Auth (UserId)
+import Models.Color (ColorId)
+import Models.Drawer (DrawerId)
+import Models.ItemType (ItemTypeId)
 import Network.HTTP.Types
 import qualified Network.Wai.Test as WT
 import Server (app)
@@ -19,116 +23,126 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        let url = fromString $ "/storage_units?room_id=" ++ show roomId
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        let url = fromString $ "/items?drawer_id=" ++ show drawerId
         let response = request methodGet url [] ""
 
         response `shouldRespondWith` [json|{message: "Invalid user token."}|] {matchStatus = 401}
 
     context "with authenticated user" $ do
-      it "returns an empty list for no storageUnits found" $ do
+      it "returns an empty list for no items found" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        let url = fromString $ "/storage_units?room_id=" ++ show roomId
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+        let url = fromString $ "/items?drawer_id=" ++ show drawerId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
         response `shouldRespondWith` [json|[]|] {matchStatus = 200}
 
-      it "returns a list of storageUnits for a user" $ do
+      it "returns a list of items for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (itemId, userId, drawerId, colorId, itemTypeId, itemName) <- liftIO $ createItem userId "red" "electronics" "item name"
+
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        liftIO $ createStorageUnit otherUserId "storageUnit0"
-        let url = fromString $ "/storage_units?room_id=" ++ show roomId
+        liftIO $ createItem otherUserId "blue" "medicine" "item name 2"
+
+        let url = fromString $ "/items?drawer_id=" ++ show drawerId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|[{id: #{storageUnitId}, user_id: #{userId}, room_id: #{roomId}, name: #{storageUnitName}}]|] {matchStatus = 200}
+        response `shouldRespondWith` [json|[{id: #{itemId}, user_id: #{userId}, drawer_id: #{drawerId}, color_id: #{colorId}, item_type_id: #{itemTypeId}, name: #{itemName}}]|] {matchStatus = 200}
 
   describe "preview" $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        (itemId, _, _, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        let url = fromString $ "/items/" ++ show itemId
 
         let response = get url
 
         response `shouldRespondWith` [json|{message: "Invalid user token."}|] {matchStatus = 401}
 
     context "with authenticated user" $ do
-      it "returns an empty list for no storageUnits found" $ do
+      it "returns an empty list for no items found" $ do
         liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        let url = fromString "/storage_units/-1"
+        let url = fromString "/items/-1"
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
         response `shouldRespondWith` [json|[]|] {matchStatus = 200}
 
-      it "returns a storageUnit for a user" $ do
+      it "returns an item for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (itemId, userId, drawerId, colorId, itemTypeId, itemName) <- liftIO $ createItem userId "red" "electronics" "item name"
+
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        liftIO $ createStorageUnit otherUserId "storageUnit0"
+        liftIO $ createItem userId "blue" "medicine" "item name 2"
+
         loginResponse <- loginUser
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        let url = fromString $ "/items/" ++ show itemId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|{id: #{storageUnitId}, user_id: #{userId}, room_id: #{roomId}, name: #{storageUnitName}}|] {matchStatus = 200}
+        response `shouldRespondWith` [json|{id: #{itemId}, user_id: #{userId}, drawer_id: #{drawerId}, color_id: #{colorId}, item_type_id: #{itemTypeId}, name: #{itemName}}|] {matchStatus = 200}
 
   describe "create" $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        let postBody = fromString $ "name=2323&room_id=" ++ show roomId
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+        (colorId, _) <- liftIO $ createColor "red"
+        (itemTypeId, _) <- liftIO $ createItemType "electronics"
+        let postBody = fromString $ "color_id=" ++ show colorId ++ "&item_type_id=" ++ show itemTypeId ++ "&drawer_id=" ++ show drawerId ++ "&name=item-name"
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
-        let response = request methodPost "/storage_units" headers postBody
+        let response = request methodPost "/items" headers postBody
 
         response `shouldRespondWith` [json|{message: "Invalid user token."}|] {matchStatus = 401}
 
     context "with authenticated user" $ do
       it "responds with 500 for missing parameter" $ do
-        userId <- liftIO $ createUser "user@user.com" "password"
+        liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
         let headers = [contentType, ("token", getToken loginResponse)]
 
-        let response = request methodPost "/storage_units" headers ""
+        let response = request methodPost "/items" headers ""
 
         response `shouldRespondWith` 500
 
-      it "creates a storage unit" $ do
+      it "creates an item" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        let postBody = fromString $ "name=2323&room_id=" ++ show roomId
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+        (colorId, _) <- liftIO $ createColor "red"
+        (itemTypeId, _) <- liftIO $ createItemType "electronics"
+        let postBody = fromString $ "color_id=" ++ show colorId ++ "&item_type_id=" ++ show itemTypeId ++ "&drawer_id=" ++ show drawerId ++ "&name=item-name"
         let headers = [contentType, ("token", getToken loginResponse)]
 
-        let response = request methodPost "/storage_units" headers postBody
+        let response = request methodPost "/items" headers postBody
 
         body <- fmap WT.simpleBody response
-        liftIO $ body `shouldContainString` "name\":\"2323\""
         liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
+        liftIO $ body `shouldContainString` fromString ("drawer_id\":" ++ show drawerId)
+        liftIO $ body `shouldContainString` fromString ("color_id\":" ++ show colorId)
+        liftIO $ body `shouldContainString` fromString ("item_type_id\":" ++ show itemTypeId)
+        liftIO $ body `shouldContainString` "name\":\"item-name"
         response `shouldRespondWith` 200
 
-      it "does not create a storage unit for another user's room" $ do
+      it "does not create an item for other users drawers" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room2"
-
-        let postBody = fromString $ "name=2323&room_id=" ++ show otherRoomId
+        (drawerId, _, _, _) <- liftIO $ createDrawer otherUserId 1 "drawer1"
+        (colorId, _) <- liftIO $ createColor "red"
+        (itemTypeId, _) <- liftIO $ createItemType "electronics"
+        let postBody = fromString $ "color_id=" ++ show colorId ++ "&item_type_id=" ++ show itemTypeId ++ "&drawer_id=" ++ show drawerId ++ "&name=item-name"
         let headers = [contentType, ("token", getToken loginResponse)]
 
-        let response = request methodPost "/storage_units" headers postBody
+        let response = request methodPost "/items" headers postBody
 
         response `shouldRespondWith` 500
 
@@ -136,9 +150,9 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
-        let patchBody = fromString $ "name=updated-name&room_id" ++ show roomId
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        let patchBody = fromString $ "name=updated-name&drawer_id=" ++ show drawerId
+        let url = fromString $ "/items/" ++ show itemId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
         let response = request methodPatch url headers patchBody
@@ -149,25 +163,24 @@ spec = with app $ do
       it "does not update record for missing parameters" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers ""
         body <- fmap WT.simpleBody response
 
         response `shouldRespondWith` 200
-        liftIO $ body `shouldContainString` "name\":\"storageUnit1\""
         liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
-        liftIO $ body `shouldContainString` fromString ("room_id\":" ++ show roomId)
+        liftIO $ body `shouldContainString` "name\":\"item name\""
+        liftIO $ body `shouldContainString` fromString ("drawer_id\":" ++ show drawerId)
 
-      it "updates a storageUnit" $ do
+      it "updates an item" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
-        let patchBody = fromString $ "name=updated-name&room_id=" ++ show roomId
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        let patchBody = fromString $ "name=updated-name&drawer_id=" ++ show drawerId
+        let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers patchBody
@@ -177,13 +190,13 @@ spec = with app $ do
         liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
-      it "does not update storage units for other users rooms" $ do
+      it "does not update an item for other user's drawers" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, otherRoomId, storageUnitName) <- liftIO $ createStorageUnit otherUserId "storageUnit1"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem otherUserId "red" "electronics" "item name"
         let patchBody = "name=updated-name"
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPatch url headers patchBody
@@ -196,8 +209,8 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        let url = fromString $ "/items/" ++ show itemId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
         let response = request methodDelete url headers ""
@@ -205,26 +218,27 @@ spec = with app $ do
         response `shouldRespondWith` [json|{message: "Invalid user token."}|] {matchStatus = 401}
 
     context "with authenticated user" $ do
-      it "deletes a storage unit" $ do
+      it "deletes an item" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodDelete url headers ""
 
         body <- fmap WT.simpleBody response
-        liftIO $ body `shouldContainString` "name\":\"storageUnit1\""
+        liftIO $ body `shouldContainString` "name\":\"item name\""
+        liftIO $ body `shouldContainString` fromString ("id\":" ++ show itemId)
         liftIO $ body `shouldContainString` fromString ("user_id\":" ++ show userId)
         response `shouldRespondWith` 200
 
-      it "does not delete storage units by other users" $ do
+      it "does not delete an item for other user's drawers" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit otherUserId "storageUnit1"
-        let url = fromString $ "/storage_units/" ++ show storageUnitId
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem otherUserId "red" "electronics" "item name"
+        let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodDelete url headers ""

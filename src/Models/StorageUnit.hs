@@ -20,6 +20,7 @@ import Data.Maybe (catMaybes)
 import Database (withConn)
 import Database.PostgreSQL.Simple (query)
 import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
+import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.ToField (ToField (toField))
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
@@ -54,27 +55,30 @@ getAllStorageUnits :: UserId -> RoomId -> IO [StorageUnit]
 getAllStorageUnits userId paramRoomId = do
   withConn $ \conn -> query conn queryString (userId, paramRoomId)
   where
-    queryString = "SELECT id, user_id, room_id, name FROM storage_units WHERE user_id = ? AND room_id = ?;"
+    queryString = [sql| SELECT id, user_id, room_id, name FROM storage_units WHERE user_id = ? AND room_id = ? |]
 
 getStorageUnit :: UserId -> StorageUnitId -> IO (Maybe StorageUnit)
 getStorageUnit userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeStorage
   where
-    queryString = "SELECT id, user_id, room_id, name FROM storage_units WHERE id = ? AND user_id = ? LIMIT 1"
+    queryString = [sql| SELECT id, user_id, room_id, name FROM storage_units WHERE id = ? AND user_id = ? LIMIT 1 |]
 
 createStorageUnit :: UserId -> RoomId -> StorageUnitName -> IO (Maybe StorageUnit)
 createStorageUnit userId paramRoomId paramName = do
   withConn $ \conn -> query conn queryString (userId, paramRoomId, userId, paramName) >>= resultsToMaybeStorage
   where
-    queryString = "INSERT INTO storage_units (user_id, room_id, name) VALUES (?, (SELECT id FROM rooms where id = ? AND user_id = ?), ?) RETURNING id, user_id, room_id, name"
+    queryString =
+      [sql| INSERT INTO storage_units (user_id, room_id, name)
+            VALUES (?, (SELECT id FROM rooms where id = ? AND user_id = ?), ?)
+            RETURNING id, user_id, room_id, name |]
 
 updateStorageUnit :: UserId -> StorageUnitId -> Maybe RoomId -> Maybe StorageUnitName -> IO (Maybe StorageUnit)
 updateStorageUnit userId paramId paramRoomId paramName = do
   withConn $ \conn -> do
     let updateList =
           catMaybes
-            [ const "room_id = ?" <$> paramRoomId,
-              const "name = ?" <$> paramName
+            [ const [sql| room_id = ? |] <$> paramRoomId,
+              const [sql| name = ? |] <$> paramName
             ]
         paramList =
           catMaybes
@@ -85,7 +89,7 @@ updateStorageUnit userId paramId paramRoomId paramName = do
             ]
         updatesString = if L.null updateList then mempty else mconcat $ L.intersperse ", " updateList
         updateQueryString = "UPDATE storage_units SET " <> updatesString <> " WHERE id = ? AND user_id = ? RETURNING id, user_id, room_id, name"
-        selectQueryString = "SELECT id, user_id, room_id, name FROM storage_units WHERE id = ? AND user_id = ? LIMIT 1"
+        selectQueryString = [sql| SELECT id, user_id, room_id, name FROM storage_units WHERE id = ? AND user_id = ? LIMIT 1 |]
 
     resultsToMaybeStorage
       =<< if L.null updateList
@@ -96,7 +100,7 @@ deleteStorageUnit :: UserId -> StorageUnitId -> IO (Maybe StorageUnit)
 deleteStorageUnit userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeStorage
   where
-    queryString = "DELETE FROM storage_units WHERE id = ? AND user_id = ? RETURNING id, user_id, room_id, name"
+    queryString = [sql| DELETE FROM storage_units WHERE id = ? AND user_id = ? RETURNING id, user_id, room_id, name |]
 
 -- helper functions
 

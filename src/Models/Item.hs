@@ -19,6 +19,7 @@ import Data.Maybe (catMaybes)
 import Database (withConn)
 import Database.PostgreSQL.Simple (query)
 import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
+import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.ToField (ToField (toField))
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
@@ -59,29 +60,46 @@ getAllItems :: UserId -> DrawerId -> IO [Item]
 getAllItems userId paramDrawerId = do
   withConn $ \conn -> query conn queryString (userId, paramDrawerId)
   where
-    queryString = "SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE user_id = ? AND drawer_id = ?;"
+    queryString =
+      [sql| SELECT id, user_id, drawer_id, color_id, item_type_id, name
+            FROM items
+            WHERE user_id = ?
+              AND drawer_id = ? |]
 
 getItem :: UserId -> ItemId -> IO (Maybe Item)
 getItem userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeItem
   where
-    queryString = "SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE id = ? AND user_id = ? LIMIT 1"
+    queryString =
+      [sql| SELECT id, user_id, drawer_id, color_id, item_type_id, name
+            FROM items
+            WHERE id = ?
+              AND user_id = ?
+            LIMIT 1 |]
 
 createItem :: UserId -> DrawerId -> ColorId -> ItemTypeId -> ItemName -> IO (Maybe Item)
 createItem userId paramDrawerId paramColorId paramItemTypeId paramName = do
   withConn $ \conn -> query conn queryString (userId, paramDrawerId, userId, paramColorId, paramItemTypeId, paramName) >>= resultsToMaybeItem
   where
-    queryString = "INSERT INTO items (user_id, drawer_id, color_id, item_type_id, name) VALUES (?, (SELECT id FROM drawers where id = ? AND user_id = ?), (SELECT id FROM colors where id = ?), (SELECT id FROM item_types where id = ?), ?) RETURNING id, user_id, drawer_id, color_id, item_type_id, name"
+    queryString =
+      [sql| INSERT INTO items (user_id, drawer_id, color_id, item_type_id, name)
+            VALUES (
+              ?,
+              (SELECT id FROM drawers where id = ? AND user_id = ?),
+              (SELECT id FROM colors where id = ?),
+              (SELECT id FROM item_types where id = ?),
+              ?)
+            RETURNING id, user_id, drawer_id, color_id, item_type_id, name |]
 
 updateItem :: UserId -> ItemId -> Maybe DrawerId -> Maybe ColorId -> Maybe ItemTypeId -> Maybe ItemName -> IO (Maybe Item)
 updateItem userId paramId paramDrawerId paramColorId paramItemTypeId paramName = do
   withConn $ \conn -> do
     let updateList =
           catMaybes
-            [ const "drawer_id = ?" <$> paramDrawerId,
-              const "color_id = ?" <$> paramColorId,
-              const "item_type_id = ?" <$> paramItemTypeId,
-              const "name = ?" <$> paramName
+            [ const [sql| drawer_id = ? |] <$> paramDrawerId,
+              const [sql| color_id = ? |] <$> paramColorId,
+              const [sql| item_type_id = ? |] <$> paramItemTypeId,
+              const [sql| name = ? |] <$> paramName
             ]
         paramList =
           catMaybes
@@ -94,7 +112,7 @@ updateItem userId paramId paramDrawerId paramColorId paramItemTypeId paramName =
             ]
         updatesString = if L.null updateList then mempty else mconcat $ L.intersperse ", " updateList
         updateQueryString = "UPDATE items SET " <> updatesString <> " WHERE id = ? AND user_id = ? RETURNING id, user_id, drawer_id, color_id, item_type_id, name"
-        selectQueryString = "SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE id = ? AND user_id = ? LIMIT 1"
+        selectQueryString = [sql| SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE id = ? AND user_id = ? LIMIT 1 |]
 
     resultsToMaybeItem
       =<< if L.null updateList
@@ -105,7 +123,11 @@ deleteItem :: UserId -> ItemId -> IO (Maybe Item)
 deleteItem userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeItem
   where
-    queryString = "DELETE FROM items WHERE id = ? AND user_id = ? RETURNING id, user_id, drawer_id, color_id, item_type_id, name"
+    queryString =
+      [sql| DELETE FROM items
+            WHERE id = ?
+              AND user_id = ?
+            RETURNING id, user_id, drawer_id, color_id, item_type_id, name |]
 
 -- helper functions
 

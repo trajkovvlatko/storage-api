@@ -5,54 +5,85 @@ module Factories
     createDrawer,
     createItemType,
     createColor,
+    createItem,
   )
 where
 
-import ClassyPrelude (fromString, unpack)
+import ClassyPrelude (MonadIO (liftIO), fromString, unpack)
 import Data.Password.Bcrypt (PasswordHash (unPasswordHash), hashPassword, mkPassword)
 import Database (withConn)
-import Database.PostgreSQL.Simple (Only (Only), query_)
+import Database.PostgreSQL.Simple (Only (Only), query)
+import Database.PostgreSQL.Simple.SqlQQ
 import Lib.Auth (UserId)
+import Models.Color (ColorId, ColorLabel)
+import Models.Drawer (DrawerId, DrawerLevel, DrawerNote)
+import Models.Item (ItemName)
+import Models.ItemType (ItemTypeId, ItemTypeLabel)
+import Models.Room (RoomId)
+import Models.StorageUnit (StorageUnitId)
 
 createUser :: String -> String -> IO UserId
 createUser email password = do
   passwordHash <- hashPassword (mkPassword (fromString password))
   let passwordString = unpack $ unPasswordHash passwordHash
-      queryString = "INSERT INTO users (email, password) VALUES ('" ++ email ++ "', '" ++ passwordString ++ "') RETURNING id"
-  [Only userId] <- withConn (\conn -> query_ conn (fromString queryString))
+      queryString = [sql| INSERT INTO users (email, password) VALUES (?, ?) RETURNING id |]
+  [Only userId] <- withConn (\conn -> query conn queryString (email, passwordString))
   return userId
 
 createRoom :: UserId -> String -> IO (Integer, String)
 createRoom userId name = do
-  results :: [(Integer, String)] <- withConn (\conn -> query_ conn (fromString queryString))
+  let queryString = [sql| INSERT INTO rooms (user_id, name) VALUES (?, ?) RETURNING id, name |]
+  results :: [(Integer, String)] <- withConn (\conn -> query conn queryString (userId, name))
   return $ head results
-  where
-    queryString = "INSERT INTO rooms (user_id, name) VALUES ('" ++ show userId ++ "', '" ++ name ++ "') RETURNING id, name"
 
-createStorageUnit :: UserId -> Integer -> String -> IO (Integer, String)
-createStorageUnit userId roomId name = do
-  results :: [(Integer, String)] <- withConn (\conn -> query_ conn (fromString queryString))
+createStorageUnit :: UserId -> String -> IO (StorageUnitId, RoomId, String)
+createStorageUnit userId name = do
+  (roomId, _) <- liftIO $ createRoom userId "room1"
+  let queryString =
+        [sql| INSERT INTO storage_units (user_id, room_id, name)
+              VALUES (?, ?, ?)
+              RETURNING id, room_id, name|]
+  results :: [(StorageUnitId, RoomId, String)] <- withConn (\conn -> query conn queryString (userId, roomId, name))
   return $ head results
-  where
-    queryString = "INSERT INTO storage_units (user_id, room_id, name) VALUES ('" ++ show userId ++ "', '" ++ show roomId ++ "', '" ++ name ++ "') RETURNING id, name"
 
-createDrawer :: UserId -> Integer -> Integer -> String -> IO (Integer, Integer, String)
-createDrawer userId storageUnitId level note = do
-  results :: [(Integer, Integer, String)] <- withConn (\conn -> query_ conn (fromString queryString))
+createDrawer :: UserId -> DrawerLevel -> DrawerNote -> IO (DrawerId, StorageUnitId, DrawerLevel, DrawerNote)
+createDrawer userId level note = do
+  (storageUnitId, _, _) <- liftIO $ createStorageUnit userId "storageUnit1"
+  let queryString =
+        [sql| INSERT INTO drawers (user_id, storage_unit_id, level, note)
+              VALUES (?, ?, ?, ?)
+              RETURNING id, storage_unit_id, level, note|]
+  results :: [(DrawerId, StorageUnitId, DrawerLevel, DrawerNote)] <- withConn (\conn -> query conn queryString (userId, storageUnitId, level, note))
   return $ head results
-  where
-    queryString = "INSERT INTO drawers (user_id, storage_unit_id, level, note) VALUES ('" ++ show userId ++ "', '" ++ show storageUnitId ++ "', '" ++ show level ++ "', '" ++ note ++ "') RETURNING id, level, note"
 
 createItemType :: String -> IO (Integer, String)
 createItemType label = do
-  results :: [(Integer, String)] <- withConn (\conn -> query_ conn (fromString queryString))
+  let queryString =
+        [sql| INSERT INTO item_types (label)
+              VALUES (?)
+              RETURNING id, label|]
+  results :: [(Integer, String)] <- withConn (\conn -> query conn queryString [label])
   return $ head results
-  where
-    queryString = "INSERT INTO item_types (label) VALUES ('" ++ label ++ "') RETURNING id, label"
 
 createColor :: String -> IO (Integer, String)
 createColor label = do
-  results :: [(Integer, String)] <- withConn (\conn -> query_ conn (fromString queryString))
+  let queryString =
+        [sql| INSERT INTO colors (label)
+              VALUES (?)
+              RETURNING id, label|]
+  results :: [(Integer, String)] <- withConn (\conn -> query conn queryString [label])
   return $ head results
-  where
-    queryString = "INSERT INTO colors (label) VALUES ('" ++ label ++ "') RETURNING id, label"
+
+createItem :: UserId -> ColorLabel -> ItemTypeLabel -> ItemName -> IO (Integer, UserId, DrawerId, ColorId, ItemTypeId, ItemName)
+createItem userId colorLabel itemTypeLabel itemName = do
+  (colorId, _) <- createColor colorLabel
+  (itemTypeId, _) <- createItemType itemTypeLabel
+  (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+
+  let queryString =
+        [sql| INSERT INTO items (user_id, drawer_id, color_id, item_type_id, name)
+              VALUES (?, ?, ?, ?, ?)
+              RETURNING id, user_id, drawer_id, color_id, item_type_id, name|]
+
+  results :: [(Integer, UserId, DrawerId, ColorId, ItemTypeId, ItemName)] <- withConn (\conn -> query conn queryString (userId, drawerId, colorId, itemTypeId, itemName))
+  return $ head results

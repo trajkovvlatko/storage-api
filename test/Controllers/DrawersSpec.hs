@@ -19,8 +19,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
+        (_, storageUnitId, _, _) <- liftIO $ createDrawer userId 1 "drawer note 1"
         let url = fromString $ "/drawers?storage_unit_id=" ++ show storageUnitId
         let response = request methodGet url [] ""
 
@@ -30,8 +29,7 @@ spec = with app $ do
       it "returns an empty list for no drawers found" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
+        (storageUnitId, _, _) <- liftIO $ createStorageUnit userId "storageUnit1"
         let url = fromString $ "/drawers?storage_unit_id=" ++ show storageUnitId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
@@ -41,14 +39,10 @@ spec = with app $ do
       it "returns a list of drawers for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, level, drawerNote) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, storageUnitId, level, drawerNote) <- liftIO $ createDrawer userId 1 "drawer1"
 
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room1"
-        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit2"
-        liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer0"
+        liftIO $ createDrawer otherUserId 1 "drawer0"
 
         let url = fromString $ "/drawers?storage_unit_id=" ++ show storageUnitId
 
@@ -60,9 +54,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show drawerId
 
         let response = get url
@@ -81,14 +73,10 @@ spec = with app $ do
 
       it "returns a drawer for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, level, drawerNote) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, storageUnitId, level, drawerNote) <- liftIO $ createDrawer userId 1 "drawer1"
 
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room2"
-        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit2"
-        liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer0"
+        liftIO $ createDrawer otherUserId 1 "drawer0"
 
         loginResponse <- loginUser
         let url = fromString $ "/drawers/" ++ show drawerId
@@ -101,8 +89,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
+        (storageUnitId, _, _) <- liftIO $ createStorageUnit userId "storageUnit1"
         let postBody = fromString $ "note=note1&level=123&storage_unit_id=" ++ show storageUnitId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
@@ -114,8 +101,7 @@ spec = with app $ do
       it "responds with 500 for missing parameter" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
+        (storageUnitId, _, _) <- liftIO $ createStorageUnit userId "storageUnit1"
         let headers = [contentType, ("token", getToken loginResponse)]
 
         let response = request methodPost "/drawers" headers ""
@@ -125,8 +111,7 @@ spec = with app $ do
       it "creates a drawer" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
+        (storageUnitId, _, _) <- liftIO $ createStorageUnit userId "storageUnit1"
         let postBody = fromString $ "note=note1&level=123&storage_unit_id=" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -142,8 +127,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom otherUserId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit otherUserId roomId "storageUnit1"
+        (storageUnitId, _, _) <- liftIO $ createStorageUnit otherUserId "storageUnit1"
         let postBody = fromString $ "note=note1&level=123&storage_unit_id=" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -155,9 +139,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, storageUnitId, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
         let patchBody = fromString $ "note=updated-note&level=123&storage_unit_id=" ++ show storageUnitId
         let url = fromString $ "/drawers/" ++ show drawerId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
@@ -170,9 +152,7 @@ spec = with app $ do
       it "does not update record for missing parameters" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, storageUnitId, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show drawerId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -188,9 +168,7 @@ spec = with app $ do
       it "updates a drawer" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, storageUnitId, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
         let patchBody = fromString $ "note=updated-note&level=123&storage_unit_id=" ++ show storageUnitId
         let url = fromString $ "/drawers/" ++ show drawerId
         let headers = [contentType, ("token", getToken loginResponse)]
@@ -207,9 +185,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room1"
-        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit1"
-        (drawerId, _, _) <- liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer otherUserId 1 "drawer1"
         let patchBody = "note=updated-note&level=123"
         let url = fromString $ "/drawers/" ++ show drawerId
         let headers = [contentType, ("token", getToken loginResponse)]
@@ -224,9 +200,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show drawerId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
@@ -238,9 +212,7 @@ spec = with app $ do
       it "deletes a drawer" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, _) <- liftIO $ createStorageUnit userId roomId "storageUnit1"
-        (drawerId, _, _) <- liftIO $ createDrawer userId storageUnitId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show drawerId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -256,9 +228,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (otherRoomId, _) <- liftIO $ createRoom otherUserId "room1"
-        (otherStorageUnitId, _) <- liftIO $ createStorageUnit otherUserId otherRoomId "storageUnit1"
-        (otherDrawerId, _, _) <- liftIO $ createDrawer otherUserId otherStorageUnitId 1 "drawer1"
+        (otherDrawerId, _, _, _) <- liftIO $ createDrawer otherUserId 1 "drawer1"
         let url = fromString $ "/drawers/" ++ show otherDrawerId
         let headers = [contentType, ("token", getToken loginResponse)]
 
