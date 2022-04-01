@@ -16,6 +16,7 @@ default-extensions:
 - DeriveGeneric
 - LambdaCase
 - QuasiQuotes
+- TemplateHaskell
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package

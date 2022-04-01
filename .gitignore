@@ -3,3 +3,4 @@
 .env
 .jwk.sig
 test/db.sql
+dist

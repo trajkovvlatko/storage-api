@@ -8,7 +8,7 @@
 # A snapshot resolver dictates the compiler version and the set of packages
 # to be used for project dependencies. For example:
 #
-# resolver: lts-3.5
+resolver: lts-18.28
 # resolver: nightly-2022-01-04
 # resolver: ghc-7.10.2
 #
@@ -17,8 +17,8 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/19.yaml
+# resolver:
+#   url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/19.yaml
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -40,7 +40,9 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps:
+extra-deps:
+  - hspec-wai-json-0.11.0@sha256:a992e6587468119a8092edc7a8af9153c718418c5d945ff3bf7a07916e4dd4a0,1706
+  - jose-jwt-0.9.4@sha256:6db77f81cfcf81cf7faf8a4dc4b2110c1603dbb94249d49d069a17b4897e9d69,3560
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

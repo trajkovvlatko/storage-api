@@ -135,6 +135,7 @@ deleteItem userId paramId = do
             RETURNING id, user_id, drawer_id, color_id, item_type_id, name |]
 
 basicSearch :: UserId -> Term -> IO [Item]
+basicSearch _ "" = return []
 basicSearch userId paramTerm = do
   withConn $ \conn -> query conn (fromString queryString) [userId]
   where
