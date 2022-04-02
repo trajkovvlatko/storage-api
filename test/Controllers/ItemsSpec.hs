@@ -23,7 +23,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
         let url = fromString $ "/items?drawer_id=" ++ show drawerId
         let response = request methodGet url [] ""
 
@@ -33,7 +33,7 @@ spec = with app $ do
       it "returns an empty list for no items found" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1" Nothing
         let url = fromString $ "/items?drawer_id=" ++ show drawerId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
@@ -43,10 +43,10 @@ spec = with app $ do
       it "returns a list of items for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (itemId, userId, drawerId, colorId, itemTypeId, itemName) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, userId, drawerId, colorId, itemTypeId, itemName) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
 
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        liftIO $ createItem otherUserId "blue" "medicine" "item name 2"
+        liftIO $ createItem otherUserId "blue" "medicine" "item name 2" Nothing
 
         let url = fromString $ "/items?drawer_id=" ++ show drawerId
 
@@ -58,7 +58,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (itemId, _, _, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, _, _, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
         let url = fromString $ "/items/" ++ show itemId
 
         let response = get url
@@ -77,10 +77,10 @@ spec = with app $ do
 
       it "returns an item for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (itemId, userId, drawerId, colorId, itemTypeId, itemName) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, userId, drawerId, colorId, itemTypeId, itemName) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
 
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        liftIO $ createItem userId "blue" "medicine" "item name 2"
+        liftIO $ createItem userId "blue" "medicine" "item name 2" Nothing
 
         loginResponse <- loginUser
         let url = fromString $ "/items/" ++ show itemId
@@ -93,7 +93,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1" Nothing
         (colorId, _) <- liftIO $ createColor "red"
         (itemTypeId, _) <- liftIO $ createItemType "electronics"
         let postBody = fromString $ "color_id=" ++ show colorId ++ "&item_type_id=" ++ show itemTypeId ++ "&drawer_id=" ++ show drawerId ++ "&name=item-name"
@@ -116,7 +116,7 @@ spec = with app $ do
       it "creates an item" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1" Nothing
         (colorId, _) <- liftIO $ createColor "red"
         (itemTypeId, _) <- liftIO $ createItemType "electronics"
         let postBody = fromString $ "color_id=" ++ show colorId ++ "&item_type_id=" ++ show itemTypeId ++ "&drawer_id=" ++ show drawerId ++ "&name=item-name"
@@ -136,7 +136,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (drawerId, _, _, _) <- liftIO $ createDrawer otherUserId 1 "drawer1"
+        (drawerId, _, _, _) <- liftIO $ createDrawer otherUserId 1 "drawer1" Nothing
         (colorId, _) <- liftIO $ createColor "red"
         (itemTypeId, _) <- liftIO $ createItemType "electronics"
         let postBody = fromString $ "color_id=" ++ show colorId ++ "&item_type_id=" ++ show itemTypeId ++ "&drawer_id=" ++ show drawerId ++ "&name=item-name"
@@ -150,7 +150,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
         let patchBody = fromString $ "name=updated-name&drawer_id=" ++ show drawerId
         let url = fromString $ "/items/" ++ show itemId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
@@ -163,7 +163,7 @@ spec = with app $ do
       it "does not update record for missing parameters" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
         let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -178,7 +178,7 @@ spec = with app $ do
       it "updates an item" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
         let patchBody = fromString $ "name=updated-name&drawer_id=" ++ show drawerId
         let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
@@ -194,7 +194,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem otherUserId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem otherUserId "red" "electronics" "item name" Nothing
         let patchBody = "name=updated-name"
         let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
@@ -209,7 +209,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
         let url = fromString $ "/items/" ++ show itemId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
@@ -221,7 +221,7 @@ spec = with app $ do
       it "deletes an item" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem userId "red" "electronics" "item name" Nothing
         let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -237,7 +237,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem otherUserId "red" "electronics" "item name"
+        (itemId, _, drawerId, _, _, _) <- liftIO $ createItem otherUserId "red" "electronics" "item name" Nothing
         let url = fromString $ "/items/" ++ show itemId
         let headers = [contentType, ("token", getToken loginResponse)]
 

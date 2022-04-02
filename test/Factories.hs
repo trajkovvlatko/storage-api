@@ -16,11 +16,11 @@ import Database.PostgreSQL.Simple (Only (Only), query)
 import Database.PostgreSQL.Simple.SqlQQ
 import Lib.Auth (UserId)
 import Models.Color (ColorId, ColorLabel)
-import Models.Drawer (DrawerId, DrawerLevel, DrawerNote)
+import Models.Drawer (Drawer (dId, dLevel, dNote, dStorageUnitId), DrawerId, DrawerLevel, DrawerNote)
 import Models.Item (ItemName)
 import Models.ItemType (ItemTypeId, ItemTypeLabel)
-import Models.Room (RoomId)
-import Models.StorageUnit (StorageUnitId)
+import Models.Room (Room (rId, rName), RoomId, RoomName)
+import Models.StorageUnit (StorageUnit (sId, sName, sRoomId), StorageUnitId, StorageUnitName)
 
 createUser :: String -> String -> IO UserId
 createUser email password = do
@@ -33,22 +33,26 @@ createUser email password = do
 createRoom :: UserId -> String -> IO (Integer, String)
 createRoom userId name = do
   let queryString = [sql| INSERT INTO rooms (user_id, name) VALUES (?, ?) RETURNING id, name |]
-  results :: [(Integer, String)] <- withConn (\conn -> query conn queryString (userId, name))
+  results :: [(Integer, RoomName)] <- withConn (\conn -> query conn queryString (userId, name))
   return $ head results
 
-createStorageUnit :: UserId -> String -> IO (StorageUnitId, RoomId, String)
-createStorageUnit userId name = do
-  (roomId, _) <- liftIO $ createRoom userId "room1"
+createStorageUnit :: UserId -> String -> Maybe Room -> IO (StorageUnitId, RoomId, String)
+createStorageUnit userId name maybeRoom = do
+  (roomId, _) <- liftIO $ case maybeRoom of
+    Nothing -> createRoom userId "room1"
+    Just r -> return (rId r, rName r)
   let queryString =
         [sql| INSERT INTO storage_units (user_id, room_id, name)
               VALUES (?, ?, ?)
               RETURNING id, room_id, name|]
-  results :: [(StorageUnitId, RoomId, String)] <- withConn (\conn -> query conn queryString (userId, roomId, name))
+  results :: [(StorageUnitId, RoomId, StorageUnitName)] <- withConn (\conn -> query conn queryString (userId, roomId, name))
   return $ head results
 
-createDrawer :: UserId -> DrawerLevel -> DrawerNote -> IO (DrawerId, StorageUnitId, DrawerLevel, DrawerNote)
-createDrawer userId level note = do
-  (storageUnitId, _, _) <- liftIO $ createStorageUnit userId "storageUnit1"
+createDrawer :: UserId -> DrawerLevel -> DrawerNote -> Maybe StorageUnit -> IO (DrawerId, StorageUnitId, DrawerLevel, DrawerNote)
+createDrawer userId level note maybeStorageUnit = do
+  (storageUnitId, _, _) <- liftIO $ case maybeStorageUnit of
+    Nothing -> createStorageUnit userId "storageUnit1" Nothing
+    Just su -> return (sId su, sRoomId su, sName su)
   let queryString =
         [sql| INSERT INTO drawers (user_id, storage_unit_id, level, note)
               VALUES (?, ?, ?, ?)
@@ -74,11 +78,13 @@ createColor label = do
   results :: [(Integer, String)] <- withConn (\conn -> query conn queryString [label])
   return $ head results
 
-createItem :: UserId -> ColorLabel -> ItemTypeLabel -> ItemName -> IO (Integer, UserId, DrawerId, ColorId, ItemTypeId, ItemName)
-createItem userId colorLabel itemTypeLabel itemName = do
+createItem :: UserId -> ColorLabel -> ItemTypeLabel -> ItemName -> Maybe Drawer -> IO (Integer, UserId, DrawerId, ColorId, ItemTypeId, ItemName)
+createItem userId colorLabel itemTypeLabel itemName maybeDrawer = do
   (colorId, _) <- createColor colorLabel
   (itemTypeId, _) <- createItemType itemTypeLabel
-  (drawerId, _, _, _) <- liftIO $ createDrawer userId 1 "drawer1"
+  (drawerId, _, _, _) <- liftIO $ case maybeDrawer of
+    Nothing -> createDrawer userId 1 "drawer1" Nothing
+    Just d -> return (dId d, dStorageUnitId d, dLevel d, dNote d)
 
   let queryString =
         [sql| INSERT INTO items (user_id, drawer_id, color_id, item_type_id, name)

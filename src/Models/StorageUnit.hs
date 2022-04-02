@@ -9,7 +9,8 @@ module Models.StorageUnit
     StorageUnit
       ( StorageUnit,
         sId,
-        sName
+        sName,
+        sRoomId
       ),
   )
 where

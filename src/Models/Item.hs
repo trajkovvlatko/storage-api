@@ -15,7 +15,7 @@ module Models.Item
   )
 where
 
-import ClassyPrelude (IsString (fromString))
+import qualified ClassyPrelude as CP
 import Data.Aeson (KeyValue ((.=)), ToJSON (toEncoding), pairs)
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
@@ -26,9 +26,11 @@ import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.ToField (ToField (toField))
 import GHC.Generics (Generic)
 import Lib.Auth (UserId)
-import Models.Color (ColorId)
-import Models.Drawer (DrawerId)
-import Models.ItemType (ItemTypeId)
+import Models.Color (ColorId, ColorLabel)
+import Models.Drawer (DrawerId, DrawerLevel, DrawerNote)
+import Models.ItemType (ItemTypeId, ItemTypeLabel)
+import Models.Room (RoomName)
+import Models.StorageUnit (StorageUnitName)
 
 type ItemId = Integer
 
@@ -58,6 +60,31 @@ instance ToJSON Item where
         <> "color_id" .= colorId
         <> "item_type_id" .= itemTypeId
         <> "name" .= name
+
+data SearchResult = SearchResult
+  { srName :: ItemName,
+    srDrawerNote :: DrawerNote,
+    srDrawerLevel :: DrawerLevel,
+    srStorageUnitName :: StorageUnitName,
+    srRoomName :: RoomName,
+    srColorLabel :: ColorLabel,
+    srItemTypeLabel :: ItemTypeLabel
+  }
+  deriving (Generic)
+
+instance FromRow SearchResult where
+  fromRow = SearchResult <$> field <*> field <*> field <*> field <*> field <*> field <*> field
+
+instance ToJSON SearchResult where
+  toEncoding (SearchResult itemName drawerNote drawerLevel storageUnitName roomName colorLabel itemTypeLabel) =
+    pairs $
+      "name" .= itemName
+        <> "drawer_note" .= drawerNote
+        <> "drawer_level" .= drawerLevel
+        <> "storage_unit_name" .= storageUnitName
+        <> "room_name" .= roomName
+        <> "color" .= colorLabel
+        <> "item_type" .= itemTypeLabel
 
 -- queries
 
@@ -134,12 +161,24 @@ deleteItem userId paramId = do
               AND user_id = ?
             RETURNING id, user_id, drawer_id, color_id, item_type_id, name |]
 
-basicSearch :: UserId -> Term -> IO [Item]
+basicSearch :: UserId -> Term -> IO [SearchResult]
 basicSearch _ "" = return []
 basicSearch userId paramTerm = do
-  withConn $ \conn -> query conn (fromString queryString) [userId]
+  withConn $ \conn -> query conn (CP.fromString queryString) [userId]
   where
-    queryString = "SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE user_id = ? AND name LIKE '%" ++ paramTerm ++ "%' ORDER BY name ASC"
+    queryArray =
+      [ "SELECT items.name, drawers.note AS drawer_note, drawers.level AS drawer_level, storage_units.name AS storage_unit_name, rooms.name AS room_name, colors.label AS color, item_types.label AS item_type",
+        "FROM items",
+        "JOIN drawers ON drawers.id = items.drawer_id",
+        "JOIN storage_units ON storage_units.id = drawers.storage_unit_id",
+        "JOIN rooms ON rooms.id = storage_units.room_id",
+        "JOIN colors ON colors.id = items.color_id",
+        "JOIN item_types ON item_types.id = items.item_type_id",
+        "WHERE items.user_id = ?",
+        "AND items.name LIKE '%" ++ paramTerm ++ "%'",
+        "ORDER BY items.name ASC"
+      ]
+    queryString = CP.unwords queryArray
 
 -- helper functions
 

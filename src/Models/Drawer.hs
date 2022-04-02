@@ -11,6 +11,7 @@ module Models.Drawer
       ( Drawer,
         dId,
         dLevel,
+        dStorageUnitId,
         dNote
       ),
   )

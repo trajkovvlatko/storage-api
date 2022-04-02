@@ -39,9 +39,9 @@ spec = with app $ do
       it "returns a list of storageUnits for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        liftIO $ createStorageUnit otherUserId "storageUnit0"
+        liftIO $ createStorageUnit otherUserId "storageUnit0" Nothing
         let url = fromString $ "/storage_units?room_id=" ++ show roomId
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
@@ -52,7 +52,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         let url = fromString $ "/storage_units/" ++ show storageUnitId
 
         let response = get url
@@ -71,9 +71,9 @@ spec = with app $ do
 
       it "returns a storageUnit for a user" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         otherUserId <- liftIO $ createUser "other@other.com" "password"
-        liftIO $ createStorageUnit otherUserId "storageUnit0"
+        liftIO $ createStorageUnit otherUserId "storageUnit0" Nothing
         loginResponse <- loginUser
         let url = fromString $ "/storage_units/" ++ show storageUnitId
 
@@ -136,7 +136,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         let patchBody = fromString $ "name=updated-name&room_id" ++ show roomId
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
@@ -149,7 +149,7 @@ spec = with app $ do
       it "does not update record for missing parameters" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -165,7 +165,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
         (roomId, _) <- liftIO $ createRoom userId "room1"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         let patchBody = fromString $ "name=updated-name&room_id=" ++ show roomId
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
@@ -181,7 +181,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, otherRoomId, storageUnitName) <- liftIO $ createStorageUnit otherUserId "storageUnit1"
+        (storageUnitId, otherRoomId, storageUnitName) <- liftIO $ createStorageUnit otherUserId "storageUnit1" Nothing
         let patchBody = "name=updated-name"
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
@@ -196,7 +196,7 @@ spec = with app $ do
     context "without authenticated user" $ do
       it "returns an error for missing token" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [("Content-Type", "application/x-www-form-urlencoded")]
 
@@ -208,7 +208,7 @@ spec = with app $ do
       it "deletes a storage unit" $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit userId "storageUnit1" Nothing
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
 
@@ -223,7 +223,7 @@ spec = with app $ do
         userId <- liftIO $ createUser "user@user.com" "password"
         otherUserId <- liftIO $ createUser "other@other.com" "password"
         loginResponse <- loginUser
-        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit otherUserId "storageUnit1"
+        (storageUnitId, roomId, storageUnitName) <- liftIO $ createStorageUnit otherUserId "storageUnit1" Nothing
         let url = fromString $ "/storage_units/" ++ show storageUnitId
         let headers = [contentType, ("token", getToken loginResponse)]
 
