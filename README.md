@@ -49,16 +49,36 @@ Rooms
 
 Storage units
 
-- list all storage units per room: `GET /rooms/:room_id/storage_units`
+- list all storage units per room: `GET /storage_units`
 - preview a storage unit: `GET /storage_units/:id`
-- create a storage unit in a room: `POST /rooms/:room_id/storage_units`
+- create a storage unit in a room: `POST /storage_units`
 - update a storage unit: `PATCH /storage_units/:id`
 - delete a storage unit: `DELETE /storage_units/:id`
 
 Drawers
 
-- list all drawers per storage unit: `GET /storage_units/:storage_unit_id/drawers`
+- list all drawers per storage unit: `GET /drawers`
 - preview a drawer: `GET /drawers/:id`
-- create a drawer in a storage unit: `POST /storage_units/:storage_unit_id/drawers`
+- create a drawer in a storage unit: `POST /drawers`
 - update a drawer: `PATCH /drawers/:id`
 - delete a drawer: `DELETE /drawers/:id`
+
+Colors
+
+- list all colors: `GET /colors`
+- preview a color: `GET /colors/:id`
+- create a color: `POST /colors`
+- update a color: `PATCH /colors/:id`
+- delete a color: `DELETE /colors/:id`
+
+Item types
+
+- list all item types: `GET /item_types`
+- preview a item types: `GET /item_types/:id`
+- create a item types: `POST /item_types`
+- update a item types: `PATCH /item_types/:id`
+- delete a item types: `DELETE /item_types/:id`
+
+Search
+
+- find an item: `GET /search/basic/:term`
