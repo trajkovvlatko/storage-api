@@ -124,6 +124,7 @@ test-suite storage-api-test
       Controllers.AuthSpec
       Controllers.ColorsSpec
       Controllers.DrawersSpec
+      Controllers.Helpers.ParamsSpec
       Controllers.ItemsSpec
       Controllers.ItemTypesSpec
       Controllers.RoomsSpec

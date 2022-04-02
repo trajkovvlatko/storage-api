@@ -4,6 +4,7 @@ import ClassyPrelude (fromString)
 import qualified Controllers.AuthSpec
 import qualified Controllers.ColorsSpec
 import qualified Controllers.DrawersSpec
+import qualified Controllers.Helpers.ParamsSpec
 import qualified Controllers.ItemTypesSpec
 import qualified Controllers.ItemsSpec
 import qualified Controllers.RoomsSpec
@@ -46,3 +47,4 @@ spec = do
   describe "Colors" Controllers.ColorsSpec.spec
   describe "Items" Controllers.ItemsSpec.spec
   describe "Search" Controllers.SearchSpec.spec
+  describe "Helpers.Params" Controllers.Helpers.ParamsSpec.spec
