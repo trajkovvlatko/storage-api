@@ -139,7 +139,7 @@ basicSearch _ "" = return []
 basicSearch userId paramTerm = do
   withConn $ \conn -> query conn (fromString queryString) [userId]
   where
-    queryString = "SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE user_id = ? AND name LIKE '%" ++ paramTerm ++ "%'"
+    queryString = "SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE user_id = ? AND name LIKE '%" ++ paramTerm ++ "%' ORDER BY name ASC"
 
 -- helper functions
 

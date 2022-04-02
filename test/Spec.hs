@@ -7,6 +7,7 @@ import qualified Controllers.DrawersSpec
 import qualified Controllers.ItemTypesSpec
 import qualified Controllers.ItemsSpec
 import qualified Controllers.RoomsSpec
+import qualified Controllers.SearchSpec
 import qualified Controllers.StorageUnitsSpec
 import Database (withConn)
 import Database.PostgreSQL.Simple (execute_)
@@ -44,3 +45,4 @@ spec = do
   describe "ItemTypes" Controllers.ItemTypesSpec.spec
   describe "Colors" Controllers.ColorsSpec.spec
   describe "Items" Controllers.ItemsSpec.spec
+  describe "Search" Controllers.SearchSpec.spec
