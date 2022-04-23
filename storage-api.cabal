@@ -80,6 +80,7 @@ library
     , text
     , time
     , wai
+    , wai-cors
     , wai-extra
     , warp
   default-language: Haskell2010
@@ -113,6 +114,7 @@ executable storage-api-exe
     , postgresql-simple
     , storage-api
     , wai
+    , wai-cors
     , wai-extra
     , warp
   default-language: Haskell2010
@@ -158,6 +160,7 @@ test-suite storage-api-test
     , postgresql-simple
     , storage-api
     , wai
+    , wai-cors
     , wai-extra
     , warp
   default-language: Haskell2010

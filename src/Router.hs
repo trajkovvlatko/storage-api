@@ -12,11 +12,20 @@ import qualified Controllers.Main as Main
 import qualified Controllers.Rooms as Rooms
 import qualified Controllers.Search as Search
 import qualified Controllers.StorageUnits as StorageUnits
+import Network.Wai.Middleware.Cors
 import Text.Blaze.Html4.FrameSet (col)
-import Web.Scotty as S (ScottyM, delete, get, patch, post)
+import Web.Scotty as S (ScottyM, addHeader, delete, get, middleware, options, patch, post, regex, text)
 
 routes :: ScottyM ()
 routes = do
+  middleware simpleCors
+
+  options (regex "^/(.*)$") $ do
+    addHeader "Access-Control-Allow-Methods" "GET, POST, PATCH, DELETE, OPTIONS"
+    addHeader "Access-Control-Allow-Headers" "Content-Type"
+    addHeader "Access-Control-Allow-Origin" "*"
+    text "ok"
+
   -- Root path
   get "/" Main.index
 

@@ -33,6 +33,7 @@ dependencies:
   - dotenv
   - wai
   - wai-extra
+  - wai-cors
   - warp
   - hspec
   - hspec-wai

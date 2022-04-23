@@ -9,7 +9,7 @@ import Data.Password.Bcrypt (Bcrypt, PasswordCheck (PasswordCheckSuccess), Passw
 import Lib.Auth (encodeUserIdToToken)
 import Lib.Error (ErrorResponse (ErrorResponse), eMessage)
 import Models.User (Email, Password, User (uId, uPassword), createUser, findUserByEmail)
-import Network.HTTP.Types (status401, status403, status422)
+import Network.HTTP.Types (status401, status403, status404, status422)
 import qualified System.Environment as ENV
 import Web.Scotty (ActionM, json, liftAndCatchIO, param, status)
 
@@ -39,7 +39,7 @@ verify paramPassword userPassword = do
   return $ checkPassword pass (PasswordHash $ pack userPassword)
 
 loginMaybeUser :: Password -> Maybe User -> ActionM ()
-loginMaybeUser _ Nothing = json $ ErrorResponse {eMessage = "Cannot find user."}
+loginMaybeUser _ Nothing = status status404 >> json (ErrorResponse {eMessage = "Cannot find user."})
 loginMaybeUser paramPassword (Just user) = do
   valid <- liftIO $ verify paramPassword (uPassword user)
   loginResponse user valid
