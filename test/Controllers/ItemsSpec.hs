@@ -52,7 +52,7 @@ spec = with app $ do
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|[{id: #{itemId}, user_id: #{userId}, drawer_id: #{drawerId}, color_id: #{colorId}, item_type_id: #{itemTypeId}, name: #{itemName}}]|] {matchStatus = 200}
+        response `shouldRespondWith` [json|[{id: #{itemId}, user_id: #{userId}, drawer_id: #{drawerId}, color_id: #{colorId}, item_type_id: #{itemTypeId}, name: #{itemName}, color_label: "red", item_type_label: "electronics"}]|] {matchStatus = 200}
 
   describe "preview" $ do
     context "without authenticated user" $ do
@@ -87,7 +87,7 @@ spec = with app $ do
 
         let response = request "GET" url [("token", getToken loginResponse)] ""
 
-        response `shouldRespondWith` [json|{id: #{itemId}, user_id: #{userId}, drawer_id: #{drawerId}, color_id: #{colorId}, item_type_id: #{itemTypeId}, name: #{itemName}}|] {matchStatus = 200}
+        response `shouldRespondWith` [json|{id: #{itemId}, user_id: #{userId}, drawer_id: #{drawerId}, color_id: #{colorId}, item_type_id: #{itemTypeId}, name: #{itemName}, color_label:"red", item_type_label: "electronics"}|] {matchStatus = 200}
 
   describe "create" $ do
     context "without authenticated user" $ do

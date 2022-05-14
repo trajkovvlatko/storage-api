@@ -161,13 +161,13 @@ updateItem userId paramId paramDrawerId paramColorId paramItemTypeId paramName =
         selectQueryString =
           [sql|
           SELECT
-            items.id, user_id, drawer_id, color_id, item_type_id, name
+            items.id, user_id, drawer_id, color_id, item_type_id, name,
             colors.label AS color_label,
             item_types.label AS item_type_label
           FROM items
           JOIN colors ON colors.id = items.color_id
           JOIN item_types ON item_types.id = items.item_type_id
-          WHERE id = ?
+          WHERE items.id = ?
           AND user_id = ? LIMIT 1 |]
 
     resultsToMaybeItem
