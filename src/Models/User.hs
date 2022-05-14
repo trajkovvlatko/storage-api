@@ -64,10 +64,8 @@ resultsToMaybeUser :: Either SqlError [(UserId, Email, Password)] -> IO (Maybe U
 resultsToMaybeUser maybeUser = do
   case maybeUser of
     Left err -> do
-      print err
       return Nothing
     Right [(resId, resEmail, resPassword)] -> do
       return $ Just $ User {uId = resId, uEmail = resEmail, uPassword = resPassword}
-    Right invalid -> do
-      print invalid
+    Right _ -> do
       return Nothing

@@ -44,15 +44,17 @@ data Item = Item
     dDrawerId :: DrawerId,
     dColorId :: ColorId,
     dItemTypeId :: ItemTypeId,
-    dName :: ItemName
+    dName :: ItemName,
+    dColorLabel :: ColorLabel,
+    dItemTypeLabel :: ItemTypeLabel
   }
   deriving (Generic)
 
 instance FromRow Item where
-  fromRow = Item <$> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = Item <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 instance ToJSON Item where
-  toEncoding (Item id' userId drawerId colorId itemTypeId name) =
+  toEncoding (Item id' userId drawerId colorId itemTypeId name colorLabel itemTypeLabel) =
     pairs $
       "id" .= id'
         <> "user_id" .= userId
@@ -60,6 +62,8 @@ instance ToJSON Item where
         <> "color_id" .= colorId
         <> "item_type_id" .= itemTypeId
         <> "name" .= name
+        <> "color_label" .= colorLabel
+        <> "item_type_label" .= itemTypeLabel
 
 data SearchResult = SearchResult
   { srName :: ItemName,
@@ -93,8 +97,13 @@ getAllItems userId paramDrawerId = do
   withConn $ \conn -> query conn queryString (userId, paramDrawerId)
   where
     queryString =
-      [sql| SELECT id, user_id, drawer_id, color_id, item_type_id, name
+      [sql| SELECT
+              items.id, user_id, drawer_id, color_id, item_type_id, name,
+              colors.label AS color_label,
+              item_types.label AS item_type_label
             FROM items
+            JOIN colors ON colors.id = items.color_id
+            JOIN item_types ON item_types.id = items.item_type_id
             WHERE user_id = ?
               AND drawer_id = ? |]
 
@@ -103,9 +112,14 @@ getItem userId paramId = do
   withConn $ \conn -> query conn queryString (paramId, userId) >>= resultsToMaybeItem
   where
     queryString =
-      [sql| SELECT id, user_id, drawer_id, color_id, item_type_id, name
+      [sql| SELECT
+              items.id, user_id, drawer_id, color_id, item_type_id, name,
+              colors.label AS color_label,
+              item_types.label AS item_type_label
             FROM items
-            WHERE id = ?
+            JOIN colors ON colors.id = items.color_id
+            JOIN item_types ON item_types.id = items.item_type_id
+            WHERE items.id = ?
               AND user_id = ?
             LIMIT 1 |]
 
@@ -121,7 +135,7 @@ createItem userId paramDrawerId paramColorId paramItemTypeId paramName = do
               (SELECT id FROM colors where id = ?),
               (SELECT id FROM item_types where id = ?),
               ?)
-            RETURNING id, user_id, drawer_id, color_id, item_type_id, name |]
+            RETURNING id, user_id, drawer_id, color_id, item_type_id, name, '' AS color_label, '' AS item_type_label |]
 
 updateItem :: UserId -> ItemId -> Maybe DrawerId -> Maybe ColorId -> Maybe ItemTypeId -> Maybe ItemName -> IO (Maybe Item)
 updateItem userId paramId paramDrawerId paramColorId paramItemTypeId paramName = do
@@ -143,8 +157,18 @@ updateItem userId paramId paramDrawerId paramColorId paramItemTypeId paramName =
               toField <$> Just userId
             ]
         updatesString = if L.null updateList then mempty else mconcat $ L.intersperse ", " updateList
-        updateQueryString = "UPDATE items SET " <> updatesString <> " WHERE id = ? AND user_id = ? RETURNING id, user_id, drawer_id, color_id, item_type_id, name"
-        selectQueryString = [sql| SELECT id, user_id, drawer_id, color_id, item_type_id, name FROM items WHERE id = ? AND user_id = ? LIMIT 1 |]
+        updateQueryString = "UPDATE items SET " <> updatesString <> " WHERE id = ? AND user_id = ? RETURNING id, user_id, drawer_id, color_id, item_type_id, name, '' AS color_label, '' AS item_type_label"
+        selectQueryString =
+          [sql|
+          SELECT
+            items.id, user_id, drawer_id, color_id, item_type_id, name
+            colors.label AS color_label,
+            item_types.label AS item_type_label
+          FROM items
+          JOIN colors ON colors.id = items.color_id
+          JOIN item_types ON item_types.id = items.item_type_id
+          WHERE id = ?
+          AND user_id = ? LIMIT 1 |]
 
     resultsToMaybeItem
       =<< if L.null updateList
@@ -159,7 +183,7 @@ deleteItem userId paramId = do
       [sql| DELETE FROM items
             WHERE id = ?
               AND user_id = ?
-            RETURNING id, user_id, drawer_id, color_id, item_type_id, name |]
+            RETURNING id, user_id, drawer_id, color_id, item_type_id, name, '' AS color_label, '' AS item_type_label |]
 
 basicSearch :: UserId -> Term -> IO [SearchResult]
 basicSearch _ "" = return []
@@ -182,9 +206,9 @@ basicSearch userId paramTerm = do
 
 -- helper functions
 
-resultsToMaybeItem :: [(ItemId, UserId, DrawerId, ColorId, ItemTypeId, ItemName)] -> IO (Maybe Item)
+resultsToMaybeItem :: [(ItemId, UserId, DrawerId, ColorId, ItemTypeId, ItemName, ColorLabel, ItemTypeLabel)] -> IO (Maybe Item)
 resultsToMaybeItem = \case
-  [(resId, resUserId, resDrawerId, resColorId, resItemTypeId, resName)] ->
+  [(resId, resUserId, resDrawerId, resColorId, resItemTypeId, resName, resColorLabel, resItemTypeLabel)] ->
     return $
       Just $
         Item
@@ -193,6 +217,8 @@ resultsToMaybeItem = \case
             dDrawerId = resDrawerId,
             dColorId = resColorId,
             dItemTypeId = resItemTypeId,
-            dName = resName
+            dName = resName,
+            dColorLabel = resColorLabel,
+            dItemTypeLabel = resItemTypeLabel
           }
   _ -> return Nothing
